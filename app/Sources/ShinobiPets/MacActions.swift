@@ -141,13 +141,18 @@ enum Mac {
 
     static func setVolume(level: Int?, muted: Bool?) async -> ActionResult {
         var parts: [String] = []
-        if let level { parts.append("set volume output volume \(max(0, min(100, level)))") }
+        let level = level.map { max(0, min(100, $0)) }
+        if let level { parts.append("set volume output volume \(level)") }
         if let muted { parts.append(muted ? "set volume with output muted" : "set volume without output muted") }
         if parts.isEmpty { return .fail("Give a level or muted.") }
         let r = await osascript(parts.joined(separator: "\n"))
         if !r.ok { return .fail("Volume change failed: \(r.out)") }
         if let level { return .ok("Volume set to \(level)%.") }
         return .ok(muted == true ? "Muted." : "Unmuted.")
+    }
+
+    static func currentVolume() async -> Int {
+        Int(await osascript("output volume of (get volume settings)").out) ?? 50
     }
 
     static func toggleDarkMode() async -> ActionResult {

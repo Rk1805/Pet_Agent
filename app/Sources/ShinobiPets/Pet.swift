@@ -74,12 +74,24 @@ final class Pet {
     private var hovering = false
     private var lastFrameRect = NSRect.zero
     private var lastFlip: CGFloat = 0
+    private var shownFrame = ""
 
     var scale: CGFloat { CGFloat(App.config.scale) }
     var fw: CGFloat { BASE * scale }
     var a: AnimMeta { meta.animations[anim] ?? meta.animations["walk"]! }
     var speed: CGFloat { (30 + CGFloat(meta.speed) * 80) * scale }
     var headTop: NSPoint { NSPoint(x: x + fw / 2, y: y + fw * 0.92) }
+
+    /// Needs smooth (30 fps) updates: walking, falling, being dragged, or riding a window that may move.
+    var needsFastUpdates: Bool {
+        dragging || platformKey == nil || !platformKey!.hasPrefix("s") || ((anim == "walk" || a.moving) && !busy)
+    }
+    /// How often this pet needs fresh window positions (pets on the Dock barely care).
+    var windowInfoInterval: CFTimeInterval {
+        if dragging { return 2 }
+        guard let k = platformKey else { return 0.2 }      // falling: needs to find something to land on
+        return k.hasPrefix("s") ? 2 : 0.4                  // on a window: notice it moving or closing
+    }
 
     init(meta: PetMeta, x: CGFloat? = nil) {
         self.meta = meta
@@ -220,7 +232,11 @@ final class Pet {
         if rect.size != lastFrameRect.size { window.setFrame(rect, display: false) }
         else if rect.origin != lastFrameRect.origin { window.setFrameOrigin(rect.origin) }
         lastFrameRect = rect
-        if !frames.isEmpty { window.sprite.contents = frames[min(frame, frames.count - 1)] }
+        let key = "\(anim)#\(frame)"
+        if !frames.isEmpty && key != shownFrame {      // only touch the layer when the picture changes
+            window.sprite.contents = frames[min(frame, frames.count - 1)]
+            shownFrame = key
+        }
         if dir != lastFlip {
             window.sprite.setAffineTransform(dir < 0 ? CGAffineTransform(scaleX: -1, y: 1) : .identity)
             lastFlip = dir

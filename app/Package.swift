@@ -8,7 +8,11 @@ let package = Package(
         .executableTarget(
             name: "ShinobiPets",
             path: "Sources/ShinobiPets",
-            linkerSettings: [.linkedFramework("Carbon")]
+            linkerSettings: [
+                .linkedFramework("Carbon"),
+                // Apple's on-device model needs macOS 26; weak-link so the app still launches on older systems.
+                .unsafeFlags(["-Xlinker", "-weak_framework", "-Xlinker", "FoundationModels"]),
+            ]
         )
     ]
 )

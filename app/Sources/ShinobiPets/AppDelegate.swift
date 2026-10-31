@@ -6,6 +6,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private(set) var pets: [Pet] = []
     weak var activePet: Pet?
     private var timer: Timer?
+    private var fast = true
     private var last = CACurrentMediaTime()
 
     func applicationDidFinishLaunching(_ note: Notification) {
@@ -29,9 +30,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
         HotKey.register { [weak self] in self?.openCommandBar(for: nil) }
 
-        let t = Timer(timeInterval: 1.0 / 60.0, repeats: true) { [weak self] _ in self?.tick() }
-        RunLoop.main.add(t, forMode: .common)
-        timer = t
+        startTimer(fast: true)
 
         // `ShinobiPets --mission "play lofi"` runs a mission at launch (handy from Terminal or Shortcuts).
         if let i = CommandLine.arguments.firstIndex(of: "--mission"), i + 1 < CommandLine.arguments.count {
@@ -44,17 +43,25 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
         let greeter = pets.first
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-            greeter?.say(App.config.apiKey.isEmpty
-                ? "Hi! Click me to give me a mission. Add an API key in Settings (🍃 menu) to unlock full AI."
-                : "Hi! Click me or press ⌃⌥Space to give me a mission.", seconds: 8)
+            greeter?.say("Hi! Click me or press ⌃⌥Space to give me a mission.", seconds: 8)
         }
+    }
+
+    /// 30 fps while something moves, 10 fps (the animation rate) when every pet is standing still.
+    private func startTimer(fast: Bool) {
+        timer?.invalidate()
+        self.fast = fast
+        let t = Timer(timeInterval: fast ? 1.0 / 30.0 : 1.0 / 10.0, repeats: true) { [weak self] _ in self?.tick() }
+        t.tolerance = fast ? 0.005 : 0.02
+        RunLoop.main.add(t, forMode: .common)
+        timer = t
     }
 
     private func tick() {
         let now = CACurrentMediaTime()
-        let dt = min(0.05, now - last)
+        let dt = min(0.12, now - last)
         last = now
-        Desktop.shared.refreshIfNeeded(now)
+        Desktop.shared.refreshIfNeeded(now, interval: pets.map(\.windowInfoInterval).min() ?? 2)
         let mouse = NSEvent.mouseLocation
         CATransaction.begin()
         CATransaction.setDisableActions(true)
@@ -64,6 +71,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             p.updateMouse(mouse)
         }
         CATransaction.commit()
+        let wantFast = pets.contains { $0.needsFastUpdates }
+        if wantFast != fast { startTimer(fast: wantFast) }
     }
 
     // MARK: pets
@@ -101,8 +110,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     func menuNeedsUpdate(_ menu: NSMenu) {
         menu.removeAllItems()
         menu.addItem(ClosureItem("Give a Mission…   ⌃⌥Space") { [weak self] in self?.openCommandBar(for: nil) })
-        let mode = NSMenuItem(title: App.config.apiKey.isEmpty ? "AI: offline (add a key in Settings)" : "AI: Claude (\(App.config.model))",
-                              action: nil, keyEquivalent: "")
+        let mode = NSMenuItem(title: MainActor.assumeIsolated { Agent.statusText }, action: nil, keyEquivalent: "")
         mode.isEnabled = false
         menu.addItem(mode)
         menu.addItem(.separator())

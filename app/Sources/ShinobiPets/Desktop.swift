@@ -22,8 +22,9 @@ final class Desktop {
     private(set) var lowestY: CGFloat = 0
     private var lastRefresh: CFTimeInterval = 0
 
-    func refreshIfNeeded(_ now: CFTimeInterval) {
-        if now - lastRefresh >= 0.2 { refresh(); lastRefresh = now }
+    /// Read window positions often only while a pet is falling (to land), less often while one stands on a window.
+    func refreshIfNeeded(_ now: CFTimeInterval, interval: CFTimeInterval) {
+        if now - lastRefresh >= interval { refresh(); lastRefresh = now }
     }
 
     func refresh() {

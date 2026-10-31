@@ -44,18 +44,25 @@ Copy `ShinobiPets.app` to `/Applications` and add it to Login Items if you want 
 | Apple Shortcuts | "run my Morning shortcut" (anything you have built in Shortcuts) |
 | The pets | "do a rasengan", "summon Itachi", "dismiss Sakura" |
 
-**AI mode** (recommended): open **🍃 → Settings…** and paste an Anthropic API key. The pet
-then uses Claude (`claude-opus-5-5` by default, low effort for snappy replies) with tool use,
-so any phrasing works and it can chain steps ("open Spotify and play something chill"). It
-remembers the conversation for 15 minutes, so "louder" or "the other one" work.
+**How it understands you** (everything stays on your Mac, no API keys, no downloads):
 
-Without a key it runs in **offline mode** and understands the common phrasings above.
+1. A built-in command parser handles the common phrasings above instantly, with no model at all.
+2. Anything else ("how much juice is left?", "turn it down a bit", "show me funny cat videos")
+   goes to **Apple's on-device model** (Apple Intelligence, macOS 26+), which picks the right
+   action with tool calling. The model is part of macOS: the OS loads and unloads it and
+   shares it with Siri and Writing Tools, so the pet itself stays at about 25 MB of RAM. It
+   remembers the last few minutes, so follow-ups like "louder" work.
 
-**Playing a specific song:** the pet tells the Spotify app to play an exact track. It finds
-the track by asking Claude to web-search the open.spotify.com link. If you'd rather
-use Spotify's own search, create a free app at developer.spotify.com/dashboard and paste its
-Client ID and Secret into Settings. Offline mode without Spotify keys opens Spotify's search
-page instead.
+On Macs without Apple Intelligence (Intel, older macOS, or switched off) the parser still works;
+the pet tells you how to turn on the rest.
+
+**Playing a specific song:** without setup, the pet opens Spotify's search for the song. To
+have it press play on the exact track, create a free app at developer.spotify.com/dashboard
+and paste its Client ID and Secret into **🍃 → Settings…**.
+
+**Lightweight:** about 25 MB of memory and around 2% CPU. It redraws at 30 fps only while a
+pet moves and at 10 fps when they all stand still, and only re-reads window positions often
+while a pet is falling or standing on a window.
 
 **Permissions:** the first time the pet controls Spotify or System Events, macOS asks you to
 allow it (System Settings → Privacy & Security → Automation). The build is ad-hoc signed, so
@@ -69,7 +76,8 @@ at launch and prints the result.
 | --- | --- |
 | `Desktop.swift` | Reads real window frames (CGWindowList) and screen floors as platforms |
 | `Pet.swift` | Per-pet window, physics, animation, dragging, speech bubble |
-| `Agent.swift` | Claude tool-use loop (raw HTTP) and the offline command parser |
+| `Agent.swift` | Mission flow and the offline command parser |
+| `OnDeviceAI.swift` | Apple's on-device model (FoundationModels) with the pet's tools |
 | `Tools.swift` | The tool definitions the agent can call, plus timers |
 | `MacActions.swift` | Apps, Spotify (AppleScript + Web API), volume, Shortcuts, etc. |
 | `UI.swift` | Command box, Settings window, global hotkey |

@@ -73,6 +73,7 @@ final class CommandBar: NSObject, NSTextFieldDelegate, NSWindowDelegate {
         NSApp.activate(ignoringOtherApps: true)
         panel.makeKeyAndOrderFront(nil)
         panel.makeFirstResponder(field)
+        MainActor.assumeIsolated { Agent.shared.prewarm(pet) }
     }
 
     func hide(restoreFocus: Bool) {
@@ -114,21 +115,18 @@ final class CommandBar: NSObject, NSTextFieldDelegate, NSWindowDelegate {
 final class SettingsWindow: NSObject, NSWindowDelegate {
     static let shared = SettingsWindow()
     private var window: NSWindow?
-    private let key = NSSecureTextField()
-    private let model = NSTextField()
+    private let aiStatus = NSTextField(wrappingLabelWithString: "")
     private let spotifyId = NSTextField()
     private let spotifySecret = NSSecureTextField()
-    private let webSearch = NSButton(checkboxWithTitle: "Let the agent search the web (finds Spotify links without Spotify keys)",
-                                     target: nil, action: nil)
 
     func show() {
         if window == nil { build() }
         let c = App.config
-        key.stringValue = c.anthropicKey
-        model.stringValue = c.model
+        aiStatus.stringValue = AIAvailability.available
+            ? "Apple Intelligence (on-device): ready. Commands are understood privately on this Mac."
+            : AIAvailability.hint
         spotifyId.stringValue = c.spotifyClientId
         spotifySecret.stringValue = c.spotifyClientSecret
-        webSearch.state = c.webSearch ? .on : .off
         NSApp.activate(ignoringOtherApps: true)
         window!.center()
         window!.makeKeyAndOrderFront(nil)
@@ -149,28 +147,23 @@ final class SettingsWindow: NSObject, NSWindowDelegate {
     }
 
     private func build() {
-        let w = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 560, height: 330), styleMask: [.titled, .closable],
+        let w = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 560, height: 220), styleMask: [.titled, .closable],
                          backing: .buffered, defer: false)
         w.title = "Shinobi Pets Settings"
         w.isReleasedWhenClosed = false
         w.delegate = self
-        for f in [key, model, spotifyId, spotifySecret] as [NSTextField] {
+        for f in [spotifyId, spotifySecret] as [NSTextField] {
             f.widthAnchor.constraint(equalToConstant: 360).isActive = true
         }
-        key.placeholderString = "sk-ant-…  (or set ANTHROPIC_API_KEY)"
-        model.placeholderString = "claude-opus-5-5"
+        aiStatus.preferredMaxLayoutWidth = 360
         spotifyId.placeholderString = "optional"
         spotifySecret.placeholderString = "optional"
 
-        let empty = NSView()
         let grid = NSGridView(views: [
-            [label("Anthropic API key"), key],
-            [empty, note("Lets your ninja understand any command. Get one at console.anthropic.com. Without it, only simple phrasings work.")],
-            [label("Model"), model],
+            [label("AI"), aiStatus],
             [label("Spotify Client ID"), spotifyId],
             [label("Spotify Client Secret"), spotifySecret],
-            [NSView(), note("Optional: makes song search exact. Create an app at developer.spotify.com/dashboard and copy its Client ID and Secret.")],
-            [NSView(), webSearch],
+            [NSView(), note("Optional: lets your ninja press play on the exact song. Create a free app at developer.spotify.com/dashboard and copy its Client ID and Secret. Without them, songs open in Spotify's search.")],
         ])
         grid.rowSpacing = 8
         grid.columnSpacing = 10
@@ -195,16 +188,11 @@ final class SettingsWindow: NSObject, NSWindowDelegate {
     }
 
     @objc private func saveClicked() {
-        App.config.anthropicKey = key.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
-        let m = model.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
-        App.config.model = m.isEmpty ? "claude-opus-5-5" : m
         App.config.spotifyClientId = spotifyId.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
         App.config.spotifyClientSecret = spotifySecret.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
-        App.config.webSearch = webSearch.state == .on
         App.config.save()
-        MainActor.assumeIsolated { Agent.shared.resetConversation() }
         window?.close()
-        App.delegate.anyPet()?.say(App.config.apiKey.isEmpty ? "Saved! (Offline mode: no API key.)" : "Saved! Ready for missions. 🍥")
+        App.delegate.anyPet()?.say("Saved! Ready for missions. 🍥")
     }
 }
 

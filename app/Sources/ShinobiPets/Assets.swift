@@ -81,11 +81,10 @@ final class SpriteCache {
         if let f = cache[pet]?[anim] { return f }
         let url = Assets.root.appendingPathComponent("strips/\(pet)_\(anim).png")
         guard let src = CGImageSourceCreateWithURL(url as CFURL, nil),
-              let strip = CGImageSourceCreateImageAtIndex(src, 0, nil),
-              let decoded = Self.decode(strip) else { return [] }
+              let strip = CGImageSourceCreateImageAtIndex(src, 0, nil) else { return [] }
         var out: [CGImage] = []
         for i in 0..<meta.frames {
-            if let f = decoded.cropping(to: CGRect(x: i * meta.w, y: 0, width: meta.w, height: meta.h)) { out.append(f) }
+            if let f = Self.decodeFrame(strip, CGRect(x: i * meta.w, y: 0, width: meta.w, height: meta.h)) { out.append(f) }
         }
         cache[pet, default: [:]][anim] = out
         return out
@@ -98,12 +97,18 @@ final class SpriteCache {
 
     func releaseAll(_ pet: String) { cache[pet] = nil }
 
-    /// Draw once into a bitmap so frame crops don't re-decode the PNG every tick.
-    private static func decode(_ img: CGImage) -> CGImage? {
-        guard let ctx = CGContext(data: nil, width: img.width, height: img.height, bitsPerComponent: 8,
-                                  bytesPerRow: 0, space: CGColorSpaceCreateDeviceRGB(),
-                                  bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue) else { return nil }
-        ctx.draw(img, in: CGRect(x: 0, y: 0, width: img.width, height: img.height))
+    private static let srgb = CGColorSpace(name: CGColorSpace.sRGB)!
+
+    /// Each frame becomes its own bitmap in the format Core Animation uses natively (sRGB, BGRA,
+    /// premultiplied), so showing a frame never needs a decode or colour conversion.
+    private static func decodeFrame(_ strip: CGImage, _ rect: CGRect) -> CGImage? {
+        guard let crop = strip.cropping(to: rect),
+              let ctx = CGContext(data: nil, width: Int(rect.width), height: Int(rect.height), bitsPerComponent: 8,
+                                  bytesPerRow: 0, space: srgb,
+                                  bitmapInfo: CGImageAlphaInfo.premultipliedFirst.rawValue | CGBitmapInfo.byteOrder32Little.rawValue)
+        else { return nil }
+        ctx.interpolationQuality = .none
+        ctx.draw(crop, in: CGRect(origin: .zero, size: rect.size))
         return ctx.makeImage()
     }
 }

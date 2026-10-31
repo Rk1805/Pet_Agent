@@ -1,6 +1,6 @@
 import AppKit
 
-/// Everything the pet can do for you. Used by the Claude agent (as tools) and by the offline command parser.
+/// Everything the pet can do for you. Used by the on-device model (as tools) and by the offline command parser.
 enum Tools {
     private static func tool(_ name: String, _ description: String, _ props: [String: Any] = [:],
                              required: [String] = []) -> [String: Any] {
@@ -16,18 +16,17 @@ enum Tools {
             tool("open_app", "Open (launch and bring to front) a macOS application by name, e.g. Spotify, Safari, Notes, Visual Studio Code.",
                  ["name": str("Application name")], required: ["name"]),
             tool("quit_app", "Quit a running macOS application.", ["name": str("Application name")], required: ["name"]),
-            tool("spotify_play",
-                 "Play music in the Spotify desktop app. Pass spotify_uri when you know the exact Spotify link or URI " +
-                 "(open.spotify.com/... or spotify:track:...). Otherwise pass query (song and artist) and kind. " +
-                 "If the result says catalogue search isn't configured, find the open.spotify.com link with web_search and call again with spotify_uri.",
-                 ["query": str("What to search for, e.g. 'Blinding Lights The Weeknd'"),
+            tool("spotify_play", "Play a song, album, playlist or artist in the Spotify app.",
+                 ["query": str("Song and artist, e.g. 'Blinding Lights The Weeknd'"),
                   "kind": oneOf(["track", "album", "playlist", "artist"], "What the query names. Default track."),
-                  "spotify_uri": str("Exact Spotify URI or open.spotify.com URL")]),
+                  "spotify_uri": str("Only if the user gave a Spotify link")]),
             tool("spotify_control", "Control Spotify playback or ask what is playing.",
                  ["action": oneOf(["play", "pause", "toggle", "next", "previous", "now_playing", "shuffle_on", "shuffle_off"], "Action")],
                  required: ["action"]),
-            tool("set_volume", "Set the Mac's output volume (0-100) and/or mute or unmute it.",
-                 ["level": ["type": "integer", "minimum": 0, "maximum": 100], "muted": ["type": "boolean"]]),
+            tool("set_volume", "Change the Mac's output volume or mute it. Use change for 'a bit louder/quieter' (about 10-15).",
+                 ["level": ["type": "integer", "description": "Absolute volume 0-100"],
+                  "change": ["type": "integer", "description": "Relative change, e.g. -10 to turn it down a bit"],
+                  "muted": ["type": "boolean", "description": "true to mute, false to unmute"]]),
             tool("open_url", "Open a web page or link in the default browser.", ["url": str("Full URL")], required: ["url"]),
             tool("search_in_browser", "Open a Google or YouTube search results page in the browser for the user to look at.",
                  ["query": str("Search terms"), "site": oneOf(["google", "youtube"], "Default google")], required: ["query"]),
@@ -78,7 +77,9 @@ enum Tools {
         case "spotify_control":
             return await Spotify.control(s("action"))
         case "set_volume":
-            return await Mac.setVolume(level: i("level"), muted: input["muted"] as? Bool)
+            var level = i("level")
+            if level == nil, let change = i("change") { level = await Mac.currentVolume() + change }
+            return await Mac.setVolume(level: level, muted: input["muted"] as? Bool)
         case "open_url":
             return Mac.openURL(s("url"))
         case "search_in_browser":
@@ -134,8 +135,14 @@ enum Tools {
                 return .fail("Spotify search failed: \(error.localizedDescription)")
             }
         }
-        return .fail("Spotify catalogue search isn't configured (no Spotify Client ID/Secret in Settings). " +
-                     "Find the song's open.spotify.com link another way and pass it as spotify_uri.")
+        // No Spotify keys: open Spotify's own search so the user is one click away.
+        guard NSWorkspace.shared.urlForApplication(withBundleIdentifier: Spotify.bundleID) != nil else {
+            return .fail("Spotify isn't installed.")
+        }
+        let encoded = query.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? query
+        _ = Mac.openURL("spotify:search:" + encoded)
+        return .ok("Opened Spotify search for \(query); the user needs to press play on the top result " +
+                   "(adding Spotify keys in Settings lets me play it directly).")
     }
 }
 
