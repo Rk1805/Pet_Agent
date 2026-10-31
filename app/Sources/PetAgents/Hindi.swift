@@ -76,13 +76,24 @@ enum Hindi {
             let label = strip(t, [NSRegularExpression.escapedPattern(for: g[0]), remind, word(#"mujhe|muje|ki|ke\s*liye|ka|timer|laga\s*(?:o|do)|मुझे|कि|के\s*लिए"#)])
             return label.isEmpty ? "timer for \(amount)" : "remind me in \(amount) to \(label)"
         }
+        // Sending to AI apps: "claude ko bhejo hello", "hello claude ko bhej do", "claude mein hello bhejo"
+        let aiApp = #"(claude|chatgpt|perplexity|gemini|क्लॉड)"#
+        let send = #"(?:bhejo|bhej\s*do|send\s*kar\s*(?:o|do)?|भेजो|भेज\s*दो)"#
+        if let g = m(t, "^" + aiApp + #"\s*(?:ko|को|mein|me|में|par|pe|पर)\s*"# + send + #"\s+(.+)$"#) {
+            return "send \(g[2]) to \(g[1] == "क्लॉड" ? "claude" : g[1])"
+        }
+        if let g = m(t, #"^(.+?)\s+"# + aiApp + #"\s*(?:ko|को|mein|me|में|par|pe|पर)\s*"# + send + "$") {
+            return "send \(g[1]) to \(g[2] == "क्लॉड" ? "claude" : g[2])"
+        }
         // Typing into apps: "claude mein hello likho", "claude se pucho chawal kaise banaye"
         if let g = m(t, #"^(claude|chatgpt|perplexity|gemini)\s*(?:se|से|ko|को)\s*(?:pucho|poocho|puchho|puchiye|पूछो|बोलो|bolo)\s+(.+)$"#)
             ?? m(t, #"^(.+?)\s+(claude|chatgpt|perplexity)\s*(?:se|से)\s*(?:pucho|poocho|puchho|पूछो)$"#).map({ [$0[0], $0[2], $0[1]] }) {
             return "ask \(g[1]) \(g[2])"
         }
-        if let g = m(t, #"^([\w .+-]{2,30}?)\s+(?:mein|me|mai|में|par|pe|पर|पे)\s+(.+?)\s+(?:likho|likh\s*do|likhiye|type\s*kar\s*(?:o|do)?|लिखो|लिख\s*दो|टाइप\s*करो)(\s*(?:aur|और)\s*(?:send|bhejo|भेजो)\s*(?:kar\s*do|karo)?)?$"#) {
-            return "type \(g[2]) in \(g[1])" + (g[3].isEmpty ? "" : " and send")
+        if let g = m(t, #"^([\w .+-]{2,30}?)\s+(?:mein|me|mai|में|par|pe|पर|पे)\s+(.+?)\s+(?:likho|likh\s*do|likhiye|type\s*kar\s*(?:o|do)?|लिखो|लिख\s*दो|टाइप\s*करो)(\s*(?:aur|और)\s*(?:send|bhejo|भेजो)\s*(?:kar\s*do|karo)?)?(?:\s*(?:bina\s+bheje|mat\s+bhejo|बिना\s+भेजे|मत\s+भेजो))?$"#) {
+            let dontSend = m(t, #"bina\s+bheje|mat\s+bhejo|मत\s+भेजो"#) != nil
+            let text = strip(g[2], [#"bina\s+bheje|बिना\s+भेजे"#])
+            return "type \(text) in \(g[1])" + (g[3].isEmpty ? "" : " and send") + (dontSend ? " but don't send" : "")
         }
         // Games: "steam pe batman khelo", "arkham city game chalao"
         if m(t, #"khelo|khel\s*do|खेलो|steam|स्टीम|\bgame\b|गेम"#) != nil, m(t, play + "|khelo|khel\\s*do|खेलो|" + open) != nil {

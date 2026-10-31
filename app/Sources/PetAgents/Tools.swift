@@ -33,7 +33,8 @@ enum Tools {
                  "and presses Return when submit is true. Use it for 'type X in Claude', 'ask ChatGPT X', 'write X in Notes'.",
                  ["app": str("App to type into, e.g. Claude, Notes. Empty = the app in front"),
                   "text": str("Exact text to type"),
-                  "submit": ["type": "boolean", "description": "Press Return afterwards (send the message)"],
+                  "submit": ["type": "boolean", "description": "Press Return afterwards to send it. Defaults to true for AI chat apps " +
+                             "(Claude, ChatGPT, Perplexity, Gemini); set false only if the user says not to send"],
                   "compose": ["type": "boolean", "description": "true when text is a request for you to write something " +
                               "(e.g. 'a haiku about rain', 'an email asking for leave'): you write it first, then type it"]],
                  required: ["text"]),
@@ -120,7 +121,8 @@ enum Tools {
                 if r.isError { return r }
                 await Mac.sleep(0.8)
             }
-            return await typeText(app: s("app"), text: text, submit: input["submit"] as? Bool ?? false)
+            let isAssistant = LocalCommands.chatAssistants.contains(s("app").lowercased().replacingOccurrences(of: " ", with: ""))
+            return await typeText(app: s("app"), text: text, submit: input["submit"] as? Bool ?? isAssistant)
         case "press_keys":
             return await pressKeys(app: s("app"), keys: s("keys"))
         case "launch_game":

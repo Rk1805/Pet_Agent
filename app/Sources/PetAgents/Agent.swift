@@ -108,22 +108,33 @@ enum LocalCommands {
         if match(lower, #"^(next|skip)( this)?( song| track)?$"#) != nil { return await call("spotify_control", ["action": "next"]) }
         if match(lower, #"^(previous|go back|last)( song| track)?$"#) != nil { return await call("spotify_control", ["action": "previous"]) }
         if match(lower, #"(what'?s|what is) (playing|this song)|now playing"#) != nil { return await call("spotify_control", ["action": "now_playing"]) }
+        // "send hello to claude", "tell chatgpt I'm back", "send this to claude: …"
+        let ai = #"(claude|chatgpt|chat gpt|perplexity|gemini|copilot)"#
+        if let g = match(t, #"^(?:send|message)\s+["“']?(.+?)["”']?\s+to\s+"# + ai + #"$"#)
+            ?? match(t, #"^(?:send|tell|message)\s+"# + ai + #"[:,]?\s+(?:that\s+)?(.+)$"#).map({ [$0[1], $0[0]] }) {
+            return await call("type_text", ["app": g[1].replacingOccurrences(of: " ", with: ""), "text": g[0], "submit": true])
+        }
         // Typing into apps: "type hello in claude", "in notes write buy milk", "ask claude how to cook rice"
-        if let g = match(t, #"^ask\s+(claude|chatgpt|chat gpt|perplexity|gemini)\s+(?:to\s+|about\s+|if\s+|whether\s+)?(.+)$"#) {
-            return await call("type_text", ["app": g[0].replacingOccurrences(of: " ", with: ""), "text": g[1], "submit": true])
+        if let g = match(t, #"^ask\s+(claude|chatgpt|chat gpt|perplexity|gemini|copilot)\s+(?:to\s+|about\s+|if\s+|whether\s+)?(for\s+)?(.+)$"#) {
+            let text = g[1].isEmpty ? g[2] : "Give me " + g[2]        // "ask claude for a joke" → "Give me a joke"
+            return await call("type_text", ["app": g[0].replacingOccurrences(of: " ", with: ""), "text": text,
+                                            "submit": Self.shouldSend(g[0], explicit: true, t)])
         }
         // "open (a new chat in) claude and ask (it) for X"
         if let g = match(t, #"^(?:open\s+)?(a\s+)?(new\s+chat\s+(?:in|on)\s+)?(claude|chatgpt|chat gpt|perplexity)\s+and\s+ask\s+(?:it\s+)?(?:for\s+|to\s+|about\s+)?(.+)$"#) {
             return await call("type_text", ["app": g[2].replacingOccurrences(of: " ", with: ""), "text": g[3], "submit": true,
                                             "new_chat": !g[1].isEmpty])
         }
-        if let g = match(t, #"^(?:type|write|paste|enter)\s+["“']?(.+?)["”']?\s+(?:in|into|on)\s+(?:the\s+)?([\w .+-]{2,30}?)(?:\s+app)?(\s+and\s+(?:send|submit|enter|press enter|hit enter)(?:\s+it)?)?$"#),
+        let typed = t.replacingOccurrences(of: #",?\s+(?:but\s+)?(?:don'?t|do not)\s+send(?:\s+it)?$"#, with: "", options: [.regularExpression, .caseInsensitive])
+        if let g = match(typed, #"^(?:type|write|paste|enter)\s+["“']?(.+?)["”']?\s+(?:in|into|on)\s+(?:the\s+)?([\w .+-]{2,30}?)(?:\s+app)?(\s+and\s+(?:send|submit|enter|press enter|hit enter)(?:\s+it)?)?$"#),
            Mac.findApp(g[1]) != nil || ["claude", "chatgpt", "perplexity"].contains(g[1].lowercased()) {
-            return await call("type_text", ["app": g[1], "text": g[0], "submit": !g[2].isEmpty, "compose": Self.isWritingRequest(g[0])])
+            return await call("type_text", ["app": g[1], "text": g[0], "submit": Self.shouldSend(g[1], explicit: !g[2].isEmpty, t),
+                                            "compose": Self.isWritingRequest(g[0])])
         }
-        if let g = match(t, #"^(?:in|on)\s+([\w .+-]{2,30}?),?\s+(?:type|write)\s+["“']?(.+?)["”']?(\s+and\s+(?:send|submit|enter)(?:\s+it)?)?$"#),
+        if let g = match(typed, #"^(?:in|on)\s+([\w .+-]{2,30}?),?\s+(?:type|write)\s+["“']?(.+?)["”']?(\s+and\s+(?:send|submit|enter)(?:\s+it)?)?$"#),
            Mac.findApp(g[0]) != nil {
-            return await call("type_text", ["app": g[0], "text": g[1], "submit": !g[2].isEmpty, "compose": Self.isWritingRequest(g[1])])
+            return await call("type_text", ["app": g[0], "text": g[1], "submit": Self.shouldSend(g[0], explicit: !g[2].isEmpty, t),
+                                            "compose": Self.isWritingRequest(g[1])])
         }
         if let g = match(t, #"^type\s+["“']?(.+?)["”']?$"#) { return await call("type_text", ["app": "", "text": g[0]]) }
         if let g = match(t, #"^open\s+(\S+\.\S+)\s+(?:in|with|on)\s+([\w .]+)$"#) {
@@ -215,6 +226,16 @@ enum LocalCommands {
         "flipkart": "https://www.flipkart.com", "hotstar": "https://www.hotstar.com", "whatsapp": "https://web.whatsapp.com",
         "यूट्यूब": "https://www.youtube.com", "गूगल": "https://www.google.com",
     ]
+
+    /// AI chat apps get the message sent (Return pressed) unless the user says not to; other apps only get it typed.
+    static let chatAssistants: Set<String> = ["claude", "chatgpt", "perplexity", "gemini", "copilot"]
+
+    static func shouldSend(_ app: String, explicit: Bool, _ command: String) -> Bool {
+        if match(command.lowercased(), #"(?:don'?t|do not|without|but not|no)\s+(?:send|sending|submit|enter)|bina\s+bheje|मत\s+भेजो|mat\s+bhejo"#) != nil {
+            return false
+        }
+        return explicit || chatAssistants.contains(app.lowercased().replacingOccurrences(of: " ", with: ""))
+    }
 
     /// "a haiku about rain", "an email to my boss…" ask the pet to write something, not to type those words.
     static func isWritingRequest(_ text: String) -> Bool {
