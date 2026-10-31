@@ -7,8 +7,73 @@ can be picked up and dragged, and now and then pull off their signature jutsu.
 
 ![roster](docs/roster.png)
 
-This stage covers the character designs only: sprites, animations and species
-definitions. The native macOS overlay and the "agent" behaviour come later.
+They also work as your **AI manager**: click a ninja, type a mission ("play Blinding Lights",
+"open Notes", "remind me in 20 minutes to stretch") and it gets done on your Mac.
+
+## Desktop app (macOS)
+
+A native menu-bar app in `app/` (Swift + AppKit, no dependencies). The pets live in
+transparent, always-on-top windows on your **real desktop**: they walk along the top of the
+Dock and on top of your actual app windows, ride along when you drag a window, fall off
+edges, and let clicks pass through to whatever is underneath them.
+
+```sh
+app/build.sh                          # builds app/build/ShinobiPets.app (needs Xcode command line tools)
+open app/build/ShinobiPets.app
+```
+
+Copy `ShinobiPets.app` to `/Applications` and add it to Login Items if you want it at startup.
+
+| Do this | What happens |
+| --- | --- |
+| **Click** a pet, or press **⌃⌥Space** anywhere | A command box opens above its head. Type a mission and press Return (↑ recalls earlier ones) |
+| **Drag** a pet | Pick it up; let go and it falls onto the window or Dock below |
+| **Right-click** a pet | Jutsu, idle animations, dismiss |
+| **🍃 menu bar icon** | Choose ninja, size, Settings, Quit |
+
+### Missions
+
+| Ask for… | Example |
+| --- | --- |
+| Music (Spotify) | "play Blinding Lights by The Weeknd", "pause", "next song", "what's playing?", "shuffle on" |
+| Apps | "open Notes", "launch VS Code", "quit Safari" |
+| Timers / reminders | "remind me in 25 minutes to take a break", "timer for 10 min" |
+| Web | "open github.com", "search best ramen in Tokyo", "youtube lofi beats" |
+| Files | "open my downloads" |
+| Mac | "volume 30", "mute", "dark mode", "battery?" |
+| Apple Shortcuts | "run my Morning shortcut" (anything you have built in Shortcuts) |
+| The pets | "do a rasengan", "summon Itachi", "dismiss Sakura" |
+
+**AI mode** (recommended): open **🍃 → Settings…** and paste an Anthropic API key. The pet
+then uses Claude (`claude-opus-5-5` by default, low effort for snappy replies) with tool use,
+so any phrasing works and it can chain steps ("open Spotify and play something chill"). It
+remembers the conversation for 15 minutes, so "louder" or "the other one" work.
+
+Without a key it runs in **offline mode** and understands the common phrasings above.
+
+**Playing a specific song:** the pet tells the Spotify app to play an exact track. It finds
+the track by asking Claude to web-search the open.spotify.com link. If you'd rather
+use Spotify's own search, create a free app at developer.spotify.com/dashboard and paste its
+Client ID and Secret into Settings. Offline mode without Spotify keys opens Spotify's search
+page instead.
+
+**Permissions:** the first time the pet controls Spotify or System Events, macOS asks you to
+allow it (System Settings → Privacy & Security → Automation). The build is ad-hoc signed, so
+macOS may ask again after a rebuild.
+
+Settings are stored in `~/Library/Application Support/ShinobiPets/config.json` (mode 600).
+For testing, `ShinobiPets.app/Contents/MacOS/ShinobiPets --mission "play lofi"` runs a mission
+at launch and prints the result.
+
+| File in `app/Sources/ShinobiPets/` | What it does |
+| --- | --- |
+| `Desktop.swift` | Reads real window frames (CGWindowList) and screen floors as platforms |
+| `Pet.swift` | Per-pet window, physics, animation, dragging, speech bubble |
+| `Agent.swift` | Claude tool-use loop (raw HTTP) and the offline command parser |
+| `Tools.swift` | The tool definitions the agent can call, plus timers |
+| `MacActions.swift` | Apps, Spotify (AppleScript + Web API), volume, Shortcuts, etc. |
+| `UI.swift` | Command box, Settings window, global hotkey |
+| `AppDelegate.swift` | Menu bar item, pet roster, 60 fps loop |
 
 ## What's here
 
@@ -16,13 +81,16 @@ definitions. The native macOS overlay and the "agent" behaviour come later.
 | --- | --- |
 | `PetsAssets/` | Every frame as a PNG, using Pet Therapy's naming: `{id}_{animation}-{n}.png` |
 | `Species/` | One Pet Therapy–style species JSON per character (animations, loops, `size`, `isMoving`, speed) |
+| `app/` | The native macOS desktop app (see above) |
 | `preview/index.html` | Browser preview: a fake desktop with walking pets, plus a gallery of every animation |
 | `preview/strips/`, `preview/manifest.js` | One sprite strip per animation and the metadata the preview reads |
 | `art/` | The character sheet plus one cut-out per character. These are the design reference the sprites copy (outfits, colours). |
 | `tools/sprites/` | The Python generator that draws and animates every sprite and jutsu effect |
 | `docs/roster.png` | Line-up of the whole cast |
 
-## Viewing the pets
+## Browser preview
+
+The original browser preview is still there for checking sprites:
 
 ```sh
 open preview/index.html          # starts with 4 pets
@@ -118,6 +186,5 @@ To add a character, put a transparent PNG in `art/`. Then add a line to
 
 ## Next steps
 
-- Native macOS runner: a transparent, click-through, always-on-top window that
-   reads `Species/` + `PetsAssets/` and uses real window frames as platforms.
-- Agent behaviour on top of the animations.
+- Voice input (push-to-talk) for missions.
+- Proactive check-ins: break reminders, calendar heads-ups.
