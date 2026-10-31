@@ -106,6 +106,10 @@ final class Pet {
         window.orderFrontRegardless()
     }
 
+    func setVisible(_ visible: Bool) {
+        if visible { window.orderFrontRegardless() } else { window.orderOut(nil); bubble.hide() }
+    }
+
     func remove() {
         bubble.hide()
         window.orderOut(nil)

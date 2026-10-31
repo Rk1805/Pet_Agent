@@ -7,6 +7,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     weak var activePet: Pet?
     private var timer: Timer?
     private var fast = true
+    private(set) var petsHidden = false
     private var last = CACurrentMediaTime()
 
     func applicationDidFinishLaunching(_ note: Notification) {
@@ -14,11 +15,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         installMainMenu()
 
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
-        if let img = NSImage(systemSymbolName: "leaf.fill", accessibilityDescription: "Shinobi Pets") {
+        if let img = NSImage(systemSymbolName: "pawprint.fill", accessibilityDescription: "Pet Agents") {
             img.isTemplate = true
             statusItem.button?.image = img
         } else {
-            statusItem.button?.title = "🍃"
+            statusItem.button?.title = "🐾"
         }
         let menu = NSMenu()
         menu.delegate = self
@@ -32,13 +33,28 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
         startTimer(fast: true)
 
-        // `ShinobiPets --mission "play lofi"` runs a mission at launch (handy from Terminal or Shortcuts).
+        // `PetAgents --snapshot <dir>` renders each Home tab to PNG (for checking the design), then quits.
+        if let i = CommandLine.arguments.firstIndex(of: "--snapshot"), i + 1 < CommandLine.arguments.count {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+                HomeWindow.snapshot(to: URL(fileURLWithPath: CommandLine.arguments[i + 1]))
+                NSApp.terminate(nil)
+            }
+            return
+        }
+
+        // `PetAgents --mission "play lofi"` runs a mission at launch (handy from Terminal or Shortcuts).
         if let i = CommandLine.arguments.firstIndex(of: "--mission"), i + 1 < CommandLine.arguments.count {
             let text = CommandLine.arguments[i + 1]
             DispatchQueue.main.asyncAfter(deadline: .now() + 1) { [weak self] in
                 if let p = self?.anyPet() { Agent.shared.handle(text, pet: p) }
             }
             return
+        }
+
+        if !App.config.welcomed {        // first launch: show Home, like Pets Therapy
+            App.config.welcomed = true
+            App.config.save()
+            HomeWindow.shared.show()
         }
 
         let greeter = pets.first
@@ -55,6 +71,21 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         t.tolerance = fast ? 0.005 : 0.02
         RunLoop.main.add(t, forMode: .common)
         timer = t
+    }
+
+    /// Clicking the app again in Finder / Launchpad / Spotlight opens Home.
+    func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
+        HomeWindow.shared.show()
+        return true
+    }
+
+    func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { false }
+
+    func setPetsHidden(_ hidden: Bool) {
+        petsHidden = hidden
+        pets.forEach { $0.setVisible(!hidden) }
+        if hidden { timer?.invalidate(); timer = nil } else if timer == nil { startTimer(fast: true) }
+        HomeModel.shared.sync()
     }
 
     private func tick() {
@@ -82,8 +113,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     func summon(_ id: String, save: Bool = true) {
         guard let m = Assets.byId[id], pet(id) == nil else { return }
+        if petsHidden { setPetsHidden(false) }
         pets.append(Pet(meta: m))
         if save { savePets() }
+        HomeModel.shared.sync()
     }
 
     func dismiss(_ id: String) {
@@ -91,6 +124,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         pets[i].remove()
         pets.remove(at: i)
         savePets()
+        HomeModel.shared.sync()
     }
 
     private func savePets() {
@@ -100,6 +134,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     func openCommandBar(for pet: Pet?) {
         if pets.isEmpty { summon("naruto") }
+        if petsHidden { setPetsHidden(false) }
         guard let target = pet ?? anyPet() else { return }
         activePet = target
         CommandBar.shared.show(for: target)
@@ -109,43 +144,21 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     func menuNeedsUpdate(_ menu: NSMenu) {
         menu.removeAllItems()
-        menu.addItem(ClosureItem("Give a Mission…   ⌃⌥Space") { [weak self] in self?.openCommandBar(for: nil) })
+        let home = ClosureItem("Home", key: "h") { HomeWindow.shared.show(tab: .pets) }
+        menu.addItem(home)
+        menu.addItem(ClosureItem("Give a Mission…") { [weak self] in self?.openCommandBar(for: nil) })
+        let hide = ClosureItem("Hide/Show Pets", key: "p") { [weak self] in
+            guard let self else { return }
+            self.setPetsHidden(!self.petsHidden)
+        }
+        hide.keyEquivalentModifierMask = [.command, .shift]
+        menu.addItem(hide)
+        menu.addItem(ClosureItem("Settings…", key: ",") { HomeWindow.shared.show(tab: .settings) })
+        menu.addItem(.separator())
         let mode = NSMenuItem(title: MainActor.assumeIsolated { Agent.statusText }, action: nil, keyEquivalent: "")
         mode.isEnabled = false
         menu.addItem(mode)
-        menu.addItem(.separator())
-
-        let chars = NSMenu()
-        for m in Assets.pets {
-            let item = ClosureItem(m.displayName) { [weak self] in
-                guard let self else { return }
-                if self.pet(m.id) != nil { self.dismiss(m.id) } else { self.summon(m.id) }
-            }
-            item.state = pet(m.id) != nil ? .on : .off
-            chars.addItem(item)
-        }
-        let charsItem = NSMenuItem(title: "Ninja", action: nil, keyEquivalent: "")
-        charsItem.submenu = chars
-        menu.addItem(charsItem)
-        menu.addItem(ClosureItem("Summon All") { [weak self] in Assets.pets.forEach { self?.summon($0.id) } })
-        menu.addItem(ClosureItem("Dismiss All") { [weak self] in
-            guard let self else { return }
-            self.pets.map(\.meta.id).forEach(self.dismiss)
-        })
-
-        let sizes = NSMenu()
-        for (name, s) in [("Small", 0.5), ("Medium", 0.75), ("Large", 1.0)] {
-            let item = ClosureItem(name) { App.config.scale = s; App.config.save() }
-            item.state = abs(App.config.scale - s) < 0.01 ? .on : .off
-            sizes.addItem(item)
-        }
-        let sizeItem = NSMenuItem(title: "Size", action: nil, keyEquivalent: "")
-        sizeItem.submenu = sizes
-        menu.addItem(sizeItem)
-
-        menu.addItem(.separator())
-        menu.addItem(ClosureItem("Settings…", key: ",") { SettingsWindow.shared.show() })
-        menu.addItem(ClosureItem("Quit Shinobi Pets", key: "q") { NSApp.terminate(nil) })
+        menu.addItem(ClosureItem("Quit", key: "q") { NSApp.terminate(nil) })
     }
 
     /// Hidden main menu so ⌘C / ⌘V / ⌘A work in text fields of this menu-bar app.

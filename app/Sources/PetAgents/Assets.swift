@@ -61,7 +61,7 @@ enum Assets {
                 dir = dir.deletingLastPathComponent()
             }
         }
-        fatalError("Shinobi Pets: can't find manifest.js / strips. Build the app with app/build.sh.")
+        fatalError("Pet Agents: can't find manifest.js / strips. Build the app with app/build.sh.")
     }
 
     private static func loadManifest() -> [PetMeta] {
@@ -79,14 +79,20 @@ final class SpriteCache {
 
     func frames(_ pet: String, _ anim: String, _ meta: AnimMeta) -> [CGImage] {
         if let f = cache[pet]?[anim] { return f }
+        let out = Self.load(pet, anim, meta)
+        cache[pet, default: [:]][anim] = out
+        return out
+    }
+
+    /// Decode frames without caching them (used for thumbnails and hover previews).
+    static func load(_ pet: String, _ anim: String, _ meta: AnimMeta, limit: Int? = nil) -> [CGImage] {
         let url = Assets.root.appendingPathComponent("strips/\(pet)_\(anim).png")
         guard let src = CGImageSourceCreateWithURL(url as CFURL, nil),
               let strip = CGImageSourceCreateImageAtIndex(src, 0, nil) else { return [] }
         var out: [CGImage] = []
-        for i in 0..<meta.frames {
-            if let f = Self.decodeFrame(strip, CGRect(x: i * meta.w, y: 0, width: meta.w, height: meta.h)) { out.append(f) }
+        for i in 0..<min(meta.frames, limit ?? meta.frames) {
+            if let f = decodeFrame(strip, CGRect(x: i * meta.w, y: 0, width: meta.w, height: meta.h)) { out.append(f) }
         }
-        cache[pet, default: [:]][anim] = out
         return out
     }
 

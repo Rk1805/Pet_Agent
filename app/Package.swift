@@ -2,12 +2,12 @@
 import PackageDescription
 
 let package = Package(
-    name: "ShinobiPets",
+    name: "PetAgents",
     platforms: [.macOS(.v13)],
     targets: [
         .executableTarget(
-            name: "ShinobiPets",
-            path: "Sources/ShinobiPets",
+            name: "PetAgents",
+            path: "Sources/PetAgents",
             linkerSettings: [
                 .linkedFramework("Carbon"),
                 // Apple's on-device model needs macOS 26; weak-link so the app still launches on older systems.

@@ -155,14 +155,15 @@ enum Mac {
         Int(await osascript("output volume of (get volume settings)").out) ?? 50
     }
 
-    static func toggleDarkMode() async -> ActionResult {
+    static func setAppearance(_ mode: String) async -> ActionResult {
+        let value = mode == "dark" ? "true" : mode == "light" ? "false" : "not dark mode"
         let r = await osascript("""
         tell application "System Events" to tell appearance preferences
-            set dark mode to not dark mode
+            set dark mode to \(value)
             return dark mode
         end tell
         """)
-        if !r.ok { return .fail("Couldn't switch appearance (allow Shinobi Pets to control System Events in System Settings → Privacy & Security → Automation). \(r.out)") }
+        if !r.ok { return .fail("Couldn't switch appearance (allow Pet Agents to control System Events in System Settings → Privacy & Security → Automation). \(r.out)") }
         return .ok(r.out == "true" ? "Dark mode on." : "Light mode on.")
     }
 

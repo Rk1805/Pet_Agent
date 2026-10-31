@@ -1,6 +1,7 @@
-# Shinobi Pets
+# Pet Agents
 
-Naruto desktop pets in the style of Pet Therapy: full-length pixel-art sprites of the
+Desktop pets that are also your on-device assistant. The first character pack is the
+**Naruto pack**: Naruto desktop pets in the style of Pet Therapy: full-length pixel-art sprites of the
 characters on `art/source/character_sheet.png` (about 170px tall) that walk along the bottom
 of the screen and on top of windows,
 can be picked up and dragged, and now and then pull off their signature jutsu.
@@ -18,18 +19,30 @@ Dock and on top of your actual app windows, ride along when you drag a window, f
 edges, and let clicks pass through to whatever is underneath them.
 
 ```sh
-app/build.sh                          # builds app/build/ShinobiPets.app (needs Xcode command line tools)
-open app/build/ShinobiPets.app
+app/build.sh                          # builds app/build/PetAgents.app (needs Xcode command line tools)
+open app/build/PetAgents.app
 ```
 
-Copy `ShinobiPets.app` to `/Applications` and add it to Login Items if you want it at startup.
+Copy `PetAgents.app` to `/Applications`. **Home → Settings** can start it at login.
 
 | Do this | What happens |
 | --- | --- |
 | **Click** a pet, or press **⌃⌥Space** anywhere | A command box opens above its head. Type a mission and press Return (↑ recalls earlier ones) |
 | **Drag** a pet | Pick it up; let go and it falls onto the window or Dock below |
 | **Right-click** a pet | Jutsu, idle animations, dismiss |
-| **🍃 menu bar icon** | Choose ninja, size, Settings, Quit |
+| **🐾 menu bar icon** | Home, Give a Mission, Hide/Show Pets, Settings, Quit |
+| Open the app again (Finder / Spotlight) | Opens **Home** |
+
+### Home
+
+A Pets Therapy–style window with a tab bar:
+
+- **Pets:** your selected pets (animated; click one to send it away) and the full roster with
+  category chips (All / Part I / Shippuden / Legends). Click a pet to put it on your desktop;
+  hover to see it walk.
+- **Missions:** type a mission, tap an example, and see recent missions with each pet's reply.
+- **Settings:** pet size, show/hide pets, open at login, the Hindi language pack, Spotify keys.
+- **About.**
 
 ### Missions
 
@@ -43,6 +56,7 @@ Copy `ShinobiPets.app` to `/Applications` and add it to Login Items if you want 
 | Mac | "volume 30", "mute", "dark mode", "battery?" |
 | Apple Shortcuts | "run my Morning shortcut" (anything you have built in Shortcuts) |
 | The pets | "do a rasengan", "summon Itachi", "dismiss Sakura" |
+| Hindi / Hinglish | "arijit singh ka gaana chalao", "notes kholo", "10 minute baad yaad dilana paani peena", "awaaz kam karo", "केसरिया बजाओ" |
 
 **How it understands you** (everything stays on your Mac, no API keys, no downloads):
 
@@ -56,9 +70,17 @@ Copy `ShinobiPets.app` to `/Applications` and add it to Login Items if you want 
 On Macs without Apple Intelligence (Intel, older macOS, or switched off) the parser still works;
 the pet tells you how to turn on the rest.
 
+**Hindi:** Apple's on-device model doesn't support Hindi, so the pet handles it in two steps.
+Common commands in Hinglish or Devanagari (play, pause, next, open, close, volume, reminders,
+search, battery, time) are rewritten into English commands by rules, with nothing to download.
+Other Devanagari text is translated to English on-device with Apple's Translation framework and
+the reply is translated back to Hindi. That needs the Hindi language pack: **Home → Settings →
+Download Hindi**. Check how a phrase is understood with
+`PetAgents.app/Contents/MacOS/PetAgents --hindi "gaana chalao"`.
+
 **Playing a specific song:** without setup, the pet opens Spotify's search for the song. To
 have it press play on the exact track, create a free app at developer.spotify.com/dashboard
-and paste its Client ID and Secret into **🍃 → Settings…**.
+and paste its Client ID and Secret into **Home → Settings**.
 
 **Lightweight:** about 25 MB of memory and around 2% CPU. It redraws at 30 fps only while a
 pet moves and at 10 fps when they all stand still, and only re-reads window positions often
@@ -68,11 +90,11 @@ while a pet is falling or standing on a window.
 allow it (System Settings → Privacy & Security → Automation). The build is ad-hoc signed, so
 macOS may ask again after a rebuild.
 
-Settings are stored in `~/Library/Application Support/ShinobiPets/config.json` (mode 600).
-For testing, `ShinobiPets.app/Contents/MacOS/ShinobiPets --mission "play lofi"` runs a mission
-at launch and prints the result.
+Settings are stored in `~/Library/Application Support/PetAgents/config.json` (mode 600).
+For testing, `PetAgents.app/Contents/MacOS/PetAgents --mission "play lofi"` runs a mission
+at launch and prints the result, and `--snapshot <folder>` renders each Home tab to PNG.
 
-| File in `app/Sources/ShinobiPets/` | What it does |
+| File in `app/Sources/PetAgents/` | What it does |
 | --- | --- |
 | `Desktop.swift` | Reads real window frames (CGWindowList) and screen floors as platforms |
 | `Pet.swift` | Per-pet window, physics, animation, dragging, speech bubble |
@@ -80,7 +102,10 @@ at launch and prints the result.
 | `OnDeviceAI.swift` | Apple's on-device model (FoundationModels) with the pet's tools |
 | `Tools.swift` | The tool definitions the agent can call, plus timers |
 | `MacActions.swift` | Apps, Spotify (AppleScript + Web API), volume, Shortcuts, etc. |
-| `UI.swift` | Command box, Settings window, global hotkey |
+| `Hindi.swift` | Hindi / Hinglish command rules and on-device translation |
+| `Home.swift` | The Home window (SwiftUI): Pets, Missions, Settings, About |
+| `AppIcon.swift` | Draws the app icon from the sprites (used by `build.sh`) |
+| `UI.swift` | Command box, global hotkey |
 | `AppDelegate.swift` | Menu bar item, pet roster, 60 fps loop |
 
 ## What's here

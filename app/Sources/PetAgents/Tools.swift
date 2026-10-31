@@ -36,7 +36,8 @@ enum Tools {
                  ["seconds": ["type": "integer", "minimum": 1, "description": "Delay in seconds"],
                   "label": str("What to remind the user about")], required: ["seconds", "label"]),
             tool("run_shortcut", "Run one of the user's Apple Shortcuts by its exact name.", ["name": str("Shortcut name")], required: ["name"]),
-            tool("toggle_dark_mode", "Switch macOS between dark and light appearance."),
+            tool("toggle_dark_mode", "Switch macOS to dark or light appearance.",
+                 ["mode": oneOf(["dark", "light", "toggle"], "Default toggle")]),
             tool("get_status", "Read Mac status: battery level, the frontmost app, or the song playing in Spotify.",
                  ["what": oneOf(["battery", "frontmost_app", "now_playing"], "What to read")], required: ["what"]),
             tool("perform_animation", "Make yourself (the pet) perform one of your animations, e.g. a jutsu, for fun.",
@@ -93,7 +94,7 @@ enum Tools {
         case "run_shortcut":
             return await Mac.runShortcut(s("name"))
         case "toggle_dark_mode":
-            return await Mac.toggleDarkMode()
+            return await Mac.setAppearance(s("mode").isEmpty ? "toggle" : s("mode"))
         case "get_status":
             switch s("what") {
             case "battery": return .ok(await Mac.battery())

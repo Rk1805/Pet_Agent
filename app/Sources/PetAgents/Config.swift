@@ -1,11 +1,12 @@
 import Foundation
 
-/// Settings saved in ~/Library/Application Support/ShinobiPets/config.json (readable only by you).
+/// Settings saved in ~/Library/Application Support/PetAgents/config.json (readable only by you).
 struct Config: Codable {
     var spotifyClientId = ""
     var spotifyClientSecret = ""
     var scale = 0.75
     var pets = ["naruto", "kakashi"]
+    var welcomed = false
 
     init() {}
 
@@ -16,15 +17,23 @@ struct Config: Codable {
         spotifyClientSecret = try c.decodeIfPresent(String.self, forKey: .spotifyClientSecret) ?? d.spotifyClientSecret
         scale = try c.decodeIfPresent(Double.self, forKey: .scale) ?? d.scale
         pets = try c.decodeIfPresent([String].self, forKey: .pets) ?? d.pets
+        welcomed = try c.decodeIfPresent(Bool.self, forKey: .welcomed) ?? d.welcomed
     }
 
     static var directory: URL {
         FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
-            .appendingPathComponent("ShinobiPets", isDirectory: true)
+            .appendingPathComponent("PetAgents", isDirectory: true)
     }
     static var url: URL { directory.appendingPathComponent("config.json") }
 
     static func load() -> Config {
+        // Carry settings over from the app's old name.
+        let old = directory.deletingLastPathComponent().appendingPathComponent("ShinobiPets/config.json")
+        if !FileManager.default.fileExists(atPath: url.path), FileManager.default.fileExists(atPath: old.path) {
+            try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+            try? FileManager.default.moveItem(at: old, to: url)
+            try? FileManager.default.removeItem(at: old.deletingLastPathComponent())
+        }
         guard let data = try? Data(contentsOf: url),
               let cfg = try? JSONDecoder().decode(Config.self, from: data) else { return Config() }
         return cfg

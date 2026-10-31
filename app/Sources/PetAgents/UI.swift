@@ -110,92 +110,6 @@ final class CommandBar: NSObject, NSTextFieldDelegate, NSWindowDelegate {
     }
 }
 
-// MARK: - settings
-
-final class SettingsWindow: NSObject, NSWindowDelegate {
-    static let shared = SettingsWindow()
-    private var window: NSWindow?
-    private let aiStatus = NSTextField(wrappingLabelWithString: "")
-    private let spotifyId = NSTextField()
-    private let spotifySecret = NSSecureTextField()
-
-    func show() {
-        if window == nil { build() }
-        let c = App.config
-        aiStatus.stringValue = AIAvailability.available
-            ? "Apple Intelligence (on-device): ready. Commands are understood privately on this Mac."
-            : AIAvailability.hint
-        spotifyId.stringValue = c.spotifyClientId
-        spotifySecret.stringValue = c.spotifyClientSecret
-        NSApp.activate(ignoringOtherApps: true)
-        window!.center()
-        window!.makeKeyAndOrderFront(nil)
-    }
-
-    private func label(_ s: String) -> NSTextField {
-        let l = NSTextField(labelWithString: s)
-        l.alignment = .right
-        return l
-    }
-
-    private func note(_ s: String) -> NSTextField {
-        let l = NSTextField(wrappingLabelWithString: s)
-        l.font = .systemFont(ofSize: 11)
-        l.textColor = .secondaryLabelColor
-        l.preferredMaxLayoutWidth = 360
-        return l
-    }
-
-    private func build() {
-        let w = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 560, height: 220), styleMask: [.titled, .closable],
-                         backing: .buffered, defer: false)
-        w.title = "Shinobi Pets Settings"
-        w.isReleasedWhenClosed = false
-        w.delegate = self
-        for f in [spotifyId, spotifySecret] as [NSTextField] {
-            f.widthAnchor.constraint(equalToConstant: 360).isActive = true
-        }
-        aiStatus.preferredMaxLayoutWidth = 360
-        spotifyId.placeholderString = "optional"
-        spotifySecret.placeholderString = "optional"
-
-        let grid = NSGridView(views: [
-            [label("AI"), aiStatus],
-            [label("Spotify Client ID"), spotifyId],
-            [label("Spotify Client Secret"), spotifySecret],
-            [NSView(), note("Optional: lets your ninja press play on the exact song. Create a free app at developer.spotify.com/dashboard and copy its Client ID and Secret. Without them, songs open in Spotify's search.")],
-        ])
-        grid.rowSpacing = 8
-        grid.columnSpacing = 10
-        grid.column(at: 0).xPlacement = .trailing
-        grid.translatesAutoresizingMaskIntoConstraints = false
-
-        let save = NSButton(title: "Save", target: self, action: #selector(saveClicked))
-        save.keyEquivalent = "\r"
-        save.translatesAutoresizingMaskIntoConstraints = false
-        let content = w.contentView!
-        content.addSubview(grid)
-        content.addSubview(save)
-        NSLayoutConstraint.activate([
-            grid.topAnchor.constraint(equalTo: content.topAnchor, constant: 20),
-            grid.leadingAnchor.constraint(equalTo: content.leadingAnchor, constant: 20),
-            grid.trailingAnchor.constraint(lessThanOrEqualTo: content.trailingAnchor, constant: -20),
-            save.topAnchor.constraint(equalTo: grid.bottomAnchor, constant: 16),
-            save.trailingAnchor.constraint(equalTo: content.trailingAnchor, constant: -20),
-            save.bottomAnchor.constraint(equalTo: content.bottomAnchor, constant: -16),
-        ])
-        window = w
-    }
-
-    @objc private func saveClicked() {
-        App.config.spotifyClientId = spotifyId.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
-        App.config.spotifyClientSecret = spotifySecret.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
-        App.config.save()
-        window?.close()
-        App.delegate.anyPet()?.say("Saved! Ready for missions. 🍥")
-    }
-}
-
 // MARK: - global hotkey (⌃⌥Space)
 
 enum HotKey {
@@ -209,7 +123,7 @@ enum HotKey {
             DispatchQueue.main.async { HotKey.handler?() }
             return noErr
         }, 1, &spec, nil, nil)
-        let id = EventHotKeyID(signature: OSType(0x5348_4E42), id: 1)   // 'SHNB'
+        let id = EventHotKeyID(signature: OSType(0x5054_4147), id: 1)   // 'PTAG'
         RegisterEventHotKey(UInt32(kVK_Space), UInt32(controlKey | optionKey), id, GetApplicationEventTarget(), 0, &ref)
     }
 }

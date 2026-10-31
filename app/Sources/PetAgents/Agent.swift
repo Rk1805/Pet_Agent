@@ -14,22 +14,43 @@ final class Agent {
         guard !text.isEmpty else { return }
         guard !running else { pet.say("One mission at a time! I'm still on the last one."); return }
         running = true
-        pet.startWorking("On it! 💨")
+        let devanagari = Hindi.hasDevanagari(text)
+        pet.startWorking(devanagari ? "अभी करता हूँ! 💨" : "On it! 💨")
         Task { @MainActor in
-            var result = await LocalCommands.run(text, pet: pet)
-            #if canImport(FoundationModels)
-            if result == nil, #available(macOS 26.0, *), AIAvailability.available {
-                result = await OnDeviceAI.shared.run(text, pet: pet)
-            }
-            #endif
-            if result == nil {
-                result = ("I don't know that one. \(AIAvailability.hint) " + LocalCommands.help, false)
-            }
-            let (reply, ok) = result!
+            let (reply, ok) = await solve(text, devanagari: devanagari, pet: pet)
+            var shown = reply
+            if devanagari, let hi = await Hindi.translate(reply, toHindi: true) { shown = hi }
             running = false
-            print("[mission] \(text) -> \(ok ? "ok" : "failed"): \(reply)")
-            pet.finishWorking(reply, success: ok)
+            print("[mission] \(text) -> \(ok ? "ok" : "failed"): \(shown)")
+            HomeModel.shared.record(text, reply: shown, ok: ok, pet: pet.meta.shortName)
+            pet.finishWorking(shown, success: ok)
         }
+    }
+
+    private func solve(_ text: String, devanagari: Bool, pet: Pet) async -> (String, Bool) {
+        // 1. Hindi / Hinglish → English command, then the instant parser.
+        let command = Hindi.toEnglishCommand(text) ?? text
+        if command != text { print("[hindi] \(text) -> \(command)") }
+        if let r = await LocalCommands.run(command, pet: pet) { return r }
+
+        // 2. Devanagari the rules didn't cover: translate on-device, then parser / model.
+        var forModel = command
+        if devanagari {
+            guard let english = await Hindi.translate(text, toHindi: false) else {
+                return ("मैं अभी आसान हिंदी कमांड समझता हूँ। बाकी के लिए Home → Settings में Hindi डाउनलोड करें।", false)
+            }
+            print("[translate] \(text) -> \(english)")
+            if let r = await LocalCommands.run(Hindi.toEnglishCommand(english) ?? english, pet: pet) { return r }
+            forModel = english
+        }
+
+        // 3. Apple's on-device model.
+        #if canImport(FoundationModels)
+        if #available(macOS 26.0, *), AIAvailability.available {
+            return await OnDeviceAI.shared.run(forModel, pet: pet)
+        }
+        #endif
+        return ("I don't know that one. \(AIAvailability.hint) " + LocalCommands.help, false)
     }
 
     /// Called when the command box opens so the model is loaded by the time you press Return.
@@ -104,7 +125,15 @@ enum LocalCommands {
         if let g = match(lower, #"^(?:set\s+)?(?:the\s+)?volume\s+(?:to\s+)?(\d+)%?$"#) { return await call("set_volume", ["level": Int(g[0]) ?? 50]) }
         if lower == "mute" { return await call("set_volume", ["muted": true]) }
         if lower == "unmute" { return await call("set_volume", ["muted": false]) }
-        if match(lower, #"^(toggle |switch to |turn on |turn off )?(dark|light) mode$"#) != nil { return await call("toggle_dark_mode", [:]) }
+        if let g = match(lower, #"^(?:toggle |switch to |turn on |enable |go )?(dark|light) mode(?: on)?$"#) {
+            return await call("toggle_dark_mode", ["mode": g[0]])
+        }
+        if match(lower, #"^(volume up|louder|turn it up|turn up the volume|increase (the )?volume)$"#) != nil {
+            return await call("set_volume", ["change": 15])
+        }
+        if match(lower, #"^(volume down|quieter|turn it down|turn down the volume|lower the volume|decrease (the )?volume)$"#) != nil {
+            return await call("set_volume", ["change": -15])
+        }
         if match(lower, #"^(battery|battery level|how much battery|what'?s my battery)"#) != nil { return await call("get_status", ["what": "battery"]) }
         if match(lower, #"^(what time is it|what'?s the time|time|what'?s the date|what day is it)$"#) != nil {
             return ("It's \(Date().formatted(date: .complete, time: .shortened)).", true)
@@ -127,6 +156,7 @@ enum LocalCommands {
                 return await call("open_path", ["path": target])
             }
             if Mac.findApp(target) != nil { return await call("open_app", ["name": target]) }
+            if let site = Self.sites[target.lowercased()] { return await call("open_url", ["url": site]) }
         }
         if let g = match(lower, #"^summon\s+(.+)$"#), let m = findNinja(g[0]) { return await call("summon_ninja", ["character_id": m.id]) }
         if let g = match(lower, #"^dismiss\s+(.+)$"#), let m = findNinja(g[0]) { return await call("dismiss_ninja", ["character_id": m.id]) }
@@ -140,6 +170,15 @@ enum LocalCommands {
         if match(lower, #"^(do )?(a |your )?(random )?jutsu$"#) != nil { pet.randomJutsu(); return ("Believe it!", true) }
         return nil
     }
+
+    static let sites: [String: String] = [
+        "youtube": "https://www.youtube.com", "google": "https://www.google.com", "gmail": "https://mail.google.com",
+        "github": "https://github.com", "instagram": "https://www.instagram.com", "facebook": "https://www.facebook.com",
+        "twitter": "https://x.com", "x": "https://x.com", "linkedin": "https://www.linkedin.com",
+        "netflix": "https://www.netflix.com", "chatgpt": "https://chatgpt.com", "amazon": "https://www.amazon.in",
+        "flipkart": "https://www.flipkart.com", "hotstar": "https://www.hotstar.com", "whatsapp": "https://web.whatsapp.com",
+        "यूट्यूब": "https://www.youtube.com", "गूगल": "https://www.google.com",
+    ]
 
     static func findNinja(_ q: String) -> PetMeta? {
         let q = q.lowercased()
