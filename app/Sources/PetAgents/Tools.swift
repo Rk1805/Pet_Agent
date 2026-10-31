@@ -27,7 +27,21 @@ enum Tools {
                  ["level": ["type": "integer", "description": "Absolute volume 0-100"],
                   "change": ["type": "integer", "description": "Relative change, e.g. -10 to turn it down a bit"],
                   "muted": ["type": "boolean", "description": "true to mute, false to unmute"]]),
-            tool("open_url", "Open a web page or link in the default browser.", ["url": str("Full URL")], required: ["url"]),
+            tool("open_url", "Open a web page or link, in the default browser or in a given app.",
+                 ["url": str("Full URL"), "app": str("Optional browser/app, e.g. Safari")], required: ["url"]),
+            tool("type_text", "Type text into an app as if the user typed it: opens or focuses the app, pastes the text, " +
+                 "and presses Return when submit is true. Use it for 'type X in Claude', 'ask ChatGPT X', 'write X in Notes'.",
+                 ["app": str("App to type into, e.g. Claude, Notes. Empty = the app in front"),
+                  "text": str("Exact text to type"),
+                  "submit": ["type": "boolean", "description": "Press Return afterwards (send the message)"],
+                  "compose": ["type": "boolean", "description": "true when text is a request for you to write something " +
+                              "(e.g. 'a haiku about rain', 'an email asking for leave'): you write it first, then type it"]],
+                 required: ["text"]),
+            tool("press_keys", "Press keyboard shortcuts in an app, e.g. cmd+n for a new chat/window, cmd+t new tab, cmd+w close tab.",
+                 ["app": str("App to press them in. Empty = the app in front"),
+                  "keys": str("Comma-separated combos, e.g. 'cmd+n' or 'cmd+l, return'")], required: ["keys"]),
+            tool("launch_game", "Launch an installed game (Steam library or Applications).", ["name": str("Game name")],
+                 required: ["name"]),
             tool("search_in_browser", "Open a Google or YouTube search results page in the browser for the user to look at.",
                  ["query": str("Search terms"), "site": oneOf(["google", "youtube"], "Default google")], required: ["query"]),
             tool("open_path", "Open a folder or file in Finder / its default app. Accepts ~ paths or names like downloads, desktop, documents.",
@@ -42,10 +56,10 @@ enum Tools {
                  ["what": oneOf(["battery", "frontmost_app", "now_playing"], "What to read")], required: ["what"]),
             tool("perform_animation", "Make yourself (the pet) perform one of your animations, e.g. a jutsu, for fun.",
                  ["animation": oneOf(anims, "Animation id")], required: ["animation"]),
-            tool("summon_ninja", "Bring another ninja pet onto the desktop.",
-                 ["character_id": oneOf(Assets.pets.map(\.id), "Character id")], required: ["character_id"]),
-            tool("dismiss_ninja", "Send a ninja pet away from the desktop.",
-                 ["character_id": oneOf(Assets.pets.map(\.id), "Character id")], required: ["character_id"]),
+            tool("summon_pet", "Bring another pet character onto the desktop.",
+                 ["name": str("Character name, e.g. Sasuke, Venom, Miles Morales")], required: ["name"]),
+            tool("dismiss_pet", "Send a pet character away from the desktop.",
+                 ["name": str("Character name")], required: ["name"]),
         ]
     }
 
@@ -56,6 +70,8 @@ enum Tools {
         case "open_app": return "Opening \(s("name"))…"
         case "quit_app": return "Closing \(s("name"))…"
         case "spotify_play": return "🎵 Finding \(s("query").isEmpty ? "that" : s("query"))…"
+        case "type_text": return "⌨️ Typing in \(s("app").isEmpty ? "the app" : s("app"))…"
+        case "launch_game": return "🎮 Starting \(s("name"))…"
         case "web_search": return "🔎 Looking it up…"
         case "open_url", "search_in_browser": return "Opening the browser…"
         case "set_timer": return "⏰ Setting a timer…"
@@ -68,6 +84,13 @@ enum Tools {
     static func run(_ name: String, _ input: [String: Any], pet: Pet) async -> ActionResult {
         let s = { (k: String) -> String in (input[k] as? String ?? "").trimmingCharacters(in: .whitespacesAndNewlines) }
         let i = { (k: String) -> Int? in (input[k] as? NSNumber)?.intValue }
+        // PETAGENTS_DRYRUN=1: log what would happen instead of doing it (for testing).
+        if ProcessInfo.processInfo.environment["PETAGENTS_DRYRUN"] == "1" {
+            var extra = ""
+            if name == "launch_game" { extra = " → \(Steam.find(s("name"))?.name ?? "not installed")" }
+            print("[dry-run] \(name) \(input)\(extra)")
+            return .ok("Done (dry run).")
+        }
         switch name {
         case "open_app":
             return s("name").isEmpty ? .fail("Missing name.") : await Mac.openApp(s("name"))
@@ -82,7 +105,29 @@ enum Tools {
             if level == nil, let change = i("change") { level = await Mac.currentVolume() + change }
             return await Mac.setVolume(level: level, muted: input["muted"] as? Bool)
         case "open_url":
-            return Mac.openURL(s("url"))
+            return await Mac.openURL(s("url"), in: s("app"))
+        case "type_text":
+            var text = input["text"] as? String ?? ""
+            if input["compose"] as? Bool == true {
+                pet.status("✍️ Writing it…")
+                guard let written = await Composer.write(text) else {
+                    return .fail("I can't write text without Apple Intelligence.")
+                }
+                text = written
+            }
+            if input["new_chat"] as? Bool == true, !s("app").isEmpty {
+                let r = await pressKeys(app: s("app"), keys: "cmd+n")
+                if r.isError { return r }
+                await Mac.sleep(0.8)
+            }
+            return await typeText(app: s("app"), text: text, submit: input["submit"] as? Bool ?? false)
+        case "press_keys":
+            return await pressKeys(app: s("app"), keys: s("keys"))
+        case "launch_game":
+            if let app = Mac.findApp(s("name")), !s("name").isEmpty, Steam.find(s("name")) == nil {
+                return await Mac.openApp(app.deletingPathExtension().lastPathComponent)
+            }
+            return Steam.launch(s("name"))
         case "search_in_browser":
             return Mac.searchWeb(s("query"), site: s("site").isEmpty ? "google" : s("site"))
         case "open_path":
@@ -106,18 +151,56 @@ enum Tools {
             guard pet.meta.animations[id] != nil else { return .fail("No animation \(id).") }
             pet.play(id)
             return .ok("Performing \(pet.meta.animations[id]!.label).")
-        case "summon_ninja":
-            guard let m = Assets.byId[s("character_id")] else { return .fail("Unknown character.") }
+        case "summon_pet", "summon_ninja":
+            guard let m = Assets.byId[s("character_id")] ?? LocalCommands.findNinja(s("name")) else {
+                return .fail("I don't know a character called \(s("name")).")
+            }
             App.delegate.summon(m.id)
             return .ok("\(m.displayName) has arrived.")
-        case "dismiss_ninja":
-            guard let m = Assets.byId[s("character_id")] else { return .fail("Unknown character.") }
+        case "dismiss_pet", "dismiss_ninja":
+            guard let m = Assets.byId[s("character_id")] ?? LocalCommands.findNinja(s("name")) else {
+                return .fail("I don't know a character called \(s("name")).")
+            }
             if m.id == pet.meta.id { return .fail("I can't dismiss myself while working on your mission.") }
             App.delegate.dismiss(m.id)
             return .ok("\(m.displayName) left.")
         default:
             return .fail("Unknown tool \(name).")
         }
+    }
+
+    /// Web versions of chat assistants, used when their desktop app isn't installed.
+    private static let webAssistants: [String: String] = [
+        "claude": "https://claude.ai/new?q=", "chatgpt": "https://chatgpt.com/?q=",
+        "perplexity": "https://www.perplexity.ai/search?q=",
+    ]
+
+    static func typeText(app: String, text: String, submit: Bool) async -> ActionResult {
+        guard !text.isEmpty else { return .fail("Nothing to type.") }
+        let key = app.lowercased().replacingOccurrences(of: " ", with: "")
+        if !app.isEmpty, Mac.findApp(app) == nil, let web = webAssistants[key] {
+            let q = text.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? text
+            return Mac.openURL(web + q)
+        }
+        guard Keyboard.allowed(prompt: true) else { return .fail(Keyboard.permissionMessage) }
+        if app.isEmpty { await Mac.sleep(0.5) }          // let focus go back to the app you were using
+        else if let err = await Keyboard.focus(app: app) { return err }
+        await Keyboard.paste(text)
+        if submit { await Mac.sleep(0.25); _ = Keyboard.press("return") }
+        let target = app.isEmpty ? (NSWorkspace.shared.frontmostApplication?.localizedName ?? "the front app") : app
+        return .ok(submit ? "Sent it in \(target)." : "Typed it into \(target).")
+    }
+
+    static func pressKeys(app: String, keys: String) async -> ActionResult {
+        guard Keyboard.allowed(prompt: true) else { return .fail(Keyboard.permissionMessage) }
+        if app.isEmpty { await Mac.sleep(0.5) } else if let err = await Keyboard.focus(app: app) { return err }
+        let combos = keys.replacingOccurrences(of: " then ", with: ",").split(separator: ",")
+            .map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
+        for c in combos {
+            guard Keyboard.press(c) else { return .fail("I don't know the key \(c).") }
+            await Mac.sleep(0.3)
+        }
+        return .ok("Pressed \(combos.joined(separator: ", ")).")
     }
 
     private static func spotifyPlay(query: String, kind: String, uri: String) async -> ActionResult {

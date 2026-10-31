@@ -1,0 +1,68 @@
+{
+  "animations": [
+    {
+      "id": "front",
+      "position": "fromEntityBottomLeft",
+      "requiredLoops": 3
+    },
+    {
+      "id": "sleep",
+      "position": "fromEntityBottomLeft",
+      "requiredLoops": 12
+    },
+    {
+      "id": "web_swing",
+      "position": "fromEntityBottomLeft",
+      "requiredLoops": 1,
+      "size": [
+        1.5,
+        1.5
+      ],
+      "isMoving": true
+    },
+    {
+      "id": "web_shot",
+      "position": "fromEntityBottomLeft",
+      "requiredLoops": 1,
+      "size": [
+        2.5,
+        1.0
+      ]
+    },
+    {
+      "id": "drum_practice",
+      "position": "fromEntityBottomLeft",
+      "requiredLoops": 2
+    }
+  ],
+  "capabilities": [
+    "AnimatedSprite",
+    "AnimationsProvider",
+    "AutoRespawn",
+    "BounceOnLateralCollisions",
+    "Draggable",
+    "FlipHorizontallyWhenGoingLeft",
+    "Gravity",
+    "LinearMovement",
+    "PetsSpritesProvider",
+    "AnimationsScheduler",
+    "Rotating",
+    "ShowsMenuOnRightClick",
+    "TrapEscaper",
+    "PlatformLooper",
+    "TeleportationPortal"
+  ],
+  "dragPath": "drag",
+  "fps": 10,
+  "zIndex": 0,
+  "scale": 1,
+  "tags": [
+    "spiderman",
+    "hero"
+  ],
+  "id": "spider_gwen",
+  "groupCategory": "spider_gwen",
+  "colorHex": "e2489b",
+  "movementPath": "walk",
+  "speed": 0.75
+}

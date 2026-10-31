@@ -1517,5 +1517,507 @@ window.PETS = [
     "kind": "jutsu"
    }
   }
+ },
+ {
+  "id": "spider_man",
+  "name": "Spider-Man",
+  "era": "hero",
+  "pack": "spiderman",
+  "color": "#c8202c",
+  "tagline": "Your friendly neighbourhood Spider-Man. Thwip!",
+  "speed": 0.7,
+  "group": "spider_man",
+  "animations": {
+   "front": {
+    "frames": 16,
+    "w": 192,
+    "h": 192,
+    "anchorX": 0,
+    "loops": 3,
+    "moving": false,
+    "label": "Idle",
+    "kind": "base"
+   },
+   "walk": {
+    "frames": 8,
+    "w": 192,
+    "h": 192,
+    "anchorX": 0,
+    "loops": 1,
+    "moving": false,
+    "label": "Walk",
+    "kind": "base"
+   },
+   "drag": {
+    "frames": 6,
+    "w": 192,
+    "h": 192,
+    "anchorX": 0,
+    "loops": 1,
+    "moving": false,
+    "label": "Drag",
+    "kind": "base"
+   },
+   "sleep": {
+    "frames": 16,
+    "w": 192,
+    "h": 192,
+    "anchorX": 0,
+    "loops": 12,
+    "moving": false,
+    "label": "Sleep",
+    "kind": "base"
+   },
+   "pizza": {
+    "frames": 16,
+    "w": 192,
+    "h": 192,
+    "anchorX": 0,
+    "loops": 2,
+    "moving": false,
+    "label": "Pizza Slice",
+    "kind": "idle"
+   },
+   "web_swing": {
+    "frames": 24,
+    "w": 288,
+    "h": 288,
+    "anchorX": 0,
+    "loops": 1,
+    "moving": true,
+    "label": "Web Swing",
+    "kind": "jutsu"
+   },
+   "web_shot": {
+    "frames": 24,
+    "w": 480,
+    "h": 192,
+    "anchorX": 0,
+    "loops": 1,
+    "moving": false,
+    "label": "Web Shooter",
+    "kind": "jutsu"
+   }
+  }
+ },
+ {
+  "id": "miles_morales",
+  "name": "Miles Morales",
+  "era": "hero",
+  "pack": "spiderman",
+  "color": "#e0262f",
+  "tagline": "Brooklyn's Spider-Man. Venom Strike, camouflage, headphones always on.",
+  "speed": 0.75,
+  "group": "miles_morales",
+  "animations": {
+   "front": {
+    "frames": 16,
+    "w": 192,
+    "h": 192,
+    "anchorX": 0,
+    "loops": 3,
+    "moving": false,
+    "label": "Idle",
+    "kind": "base"
+   },
+   "walk": {
+    "frames": 8,
+    "w": 192,
+    "h": 192,
+    "anchorX": 0,
+    "loops": 1,
+    "moving": false,
+    "label": "Walk",
+    "kind": "base"
+   },
+   "drag": {
+    "frames": 6,
+    "w": 192,
+    "h": 192,
+    "anchorX": 0,
+    "loops": 1,
+    "moving": false,
+    "label": "Drag",
+    "kind": "base"
+   },
+   "sleep": {
+    "frames": 16,
+    "w": 192,
+    "h": 192,
+    "anchorX": 0,
+    "loops": 12,
+    "moving": false,
+    "label": "Sleep",
+    "kind": "base"
+   },
+   "web_swing": {
+    "frames": 24,
+    "w": 288,
+    "h": 288,
+    "anchorX": 0,
+    "loops": 1,
+    "moving": true,
+    "label": "Web Swing",
+    "kind": "jutsu"
+   },
+   "venom_strike": {
+    "frames": 24,
+    "w": 384,
+    "h": 192,
+    "anchorX": 0,
+    "loops": 1,
+    "moving": false,
+    "label": "Venom Strike",
+    "kind": "jutsu"
+   },
+   "camouflage": {
+    "frames": 22,
+    "w": 192,
+    "h": 192,
+    "anchorX": 0,
+    "loops": 1,
+    "moving": false,
+    "label": "Camouflage",
+    "kind": "jutsu"
+   },
+   "vibing": {
+    "frames": 16,
+    "w": 192,
+    "h": 192,
+    "anchorX": 0,
+    "loops": 2,
+    "moving": false,
+    "label": "Headphones On",
+    "kind": "idle"
+   }
+  }
+ },
+ {
+  "id": "spider_gwen",
+  "name": "Spider-Gwen",
+  "era": "hero",
+  "pack": "spiderman",
+  "color": "#e2489b",
+  "tagline": "Ghost-Spider from Earth-65. Drummer for the Mary Janes.",
+  "speed": 0.75,
+  "group": "spider_gwen",
+  "animations": {
+   "front": {
+    "frames": 16,
+    "w": 192,
+    "h": 192,
+    "anchorX": 0,
+    "loops": 3,
+    "moving": false,
+    "label": "Idle",
+    "kind": "base"
+   },
+   "walk": {
+    "frames": 8,
+    "w": 192,
+    "h": 192,
+    "anchorX": 0,
+    "loops": 1,
+    "moving": false,
+    "label": "Walk",
+    "kind": "base"
+   },
+   "drag": {
+    "frames": 6,
+    "w": 192,
+    "h": 192,
+    "anchorX": 0,
+    "loops": 1,
+    "moving": false,
+    "label": "Drag",
+    "kind": "base"
+   },
+   "sleep": {
+    "frames": 16,
+    "w": 192,
+    "h": 192,
+    "anchorX": 0,
+    "loops": 12,
+    "moving": false,
+    "label": "Sleep",
+    "kind": "base"
+   },
+   "web_swing": {
+    "frames": 24,
+    "w": 288,
+    "h": 288,
+    "anchorX": 0,
+    "loops": 1,
+    "moving": true,
+    "label": "Web Swing",
+    "kind": "jutsu"
+   },
+   "web_shot": {
+    "frames": 24,
+    "w": 480,
+    "h": 192,
+    "anchorX": 0,
+    "loops": 1,
+    "moving": false,
+    "label": "Web Shooter",
+    "kind": "jutsu"
+   },
+   "drum_practice": {
+    "frames": 16,
+    "w": 192,
+    "h": 192,
+    "anchorX": 0,
+    "loops": 2,
+    "moving": false,
+    "label": "Drum Practice",
+    "kind": "idle"
+   }
+  }
+ },
+ {
+  "id": "doc_ock",
+  "name": "Doctor Octopus",
+  "era": "villain",
+  "pack": "spiderman",
+  "color": "#c9a227",
+  "tagline": "Otto Octavius. Four arms, zero patience.",
+  "speed": 0.4,
+  "group": "doc_ock",
+  "animations": {
+   "front": {
+    "frames": 16,
+    "w": 192,
+    "h": 192,
+    "anchorX": 0,
+    "loops": 3,
+    "moving": false,
+    "label": "Idle",
+    "kind": "base"
+   },
+   "walk": {
+    "frames": 8,
+    "w": 192,
+    "h": 192,
+    "anchorX": 0,
+    "loops": 1,
+    "moving": false,
+    "label": "Walk",
+    "kind": "base"
+   },
+   "drag": {
+    "frames": 6,
+    "w": 192,
+    "h": 192,
+    "anchorX": 0,
+    "loops": 1,
+    "moving": false,
+    "label": "Drag",
+    "kind": "base"
+   },
+   "sleep": {
+    "frames": 16,
+    "w": 192,
+    "h": 192,
+    "anchorX": 0,
+    "loops": 12,
+    "moving": false,
+    "label": "Sleep",
+    "kind": "base"
+   },
+   "tea_break": {
+    "frames": 16,
+    "w": 192,
+    "h": 192,
+    "anchorX": 0,
+    "loops": 2,
+    "moving": false,
+    "label": "Tea Break",
+    "kind": "idle"
+   },
+   "tentacle_slam": {
+    "frames": 24,
+    "w": 384,
+    "h": 192,
+    "anchorX": 0,
+    "loops": 1,
+    "moving": false,
+    "label": "Tentacle Slam",
+    "kind": "jutsu"
+   },
+   "tentacle_rise": {
+    "frames": 28,
+    "w": 192,
+    "h": 346,
+    "anchorX": 0,
+    "loops": 1,
+    "moving": false,
+    "label": "Rise of the Arms",
+    "kind": "jutsu"
+   }
+  }
+ },
+ {
+  "id": "green_goblin",
+  "name": "Green Goblin",
+  "era": "villain",
+  "pack": "spiderman",
+  "color": "#5fa83a",
+  "tagline": "Norman Osborn's worst idea. Pumpkin bombs and a jet glider.",
+  "speed": 0.55,
+  "group": "green_goblin",
+  "animations": {
+   "front": {
+    "frames": 16,
+    "w": 192,
+    "h": 192,
+    "anchorX": 0,
+    "loops": 3,
+    "moving": false,
+    "label": "Idle",
+    "kind": "base"
+   },
+   "walk": {
+    "frames": 8,
+    "w": 192,
+    "h": 192,
+    "anchorX": 0,
+    "loops": 1,
+    "moving": false,
+    "label": "Walk",
+    "kind": "base"
+   },
+   "drag": {
+    "frames": 6,
+    "w": 192,
+    "h": 192,
+    "anchorX": 0,
+    "loops": 1,
+    "moving": false,
+    "label": "Drag",
+    "kind": "base"
+   },
+   "sleep": {
+    "frames": 16,
+    "w": 192,
+    "h": 192,
+    "anchorX": 0,
+    "loops": 12,
+    "moving": false,
+    "label": "Sleep",
+    "kind": "base"
+   },
+   "pumpkin_bomb": {
+    "frames": 26,
+    "w": 480,
+    "h": 192,
+    "anchorX": 0,
+    "loops": 1,
+    "moving": false,
+    "label": "Pumpkin Bomb",
+    "kind": "jutsu"
+   },
+   "goblin_glider": {
+    "frames": 28,
+    "w": 192,
+    "h": 346,
+    "anchorX": 0,
+    "loops": 1,
+    "moving": true,
+    "label": "Goblin Glider",
+    "kind": "jutsu"
+   },
+   "cackle": {
+    "frames": 16,
+    "w": 192,
+    "h": 240,
+    "anchorX": 0,
+    "loops": 2,
+    "moving": false,
+    "label": "Evil Cackle",
+    "kind": "idle"
+   }
+  }
+ },
+ {
+  "id": "venom",
+  "name": "Venom",
+  "era": "villain",
+  "pack": "spiderman",
+  "color": "#8c8ca8",
+  "tagline": "We are Venom. Fond of chocolate and tater tots.",
+  "speed": 0.55,
+  "group": "venom",
+  "animations": {
+   "front": {
+    "frames": 16,
+    "w": 192,
+    "h": 192,
+    "anchorX": 0,
+    "loops": 3,
+    "moving": false,
+    "label": "Idle",
+    "kind": "base"
+   },
+   "walk": {
+    "frames": 8,
+    "w": 192,
+    "h": 192,
+    "anchorX": 0,
+    "loops": 1,
+    "moving": false,
+    "label": "Walk",
+    "kind": "base"
+   },
+   "drag": {
+    "frames": 6,
+    "w": 192,
+    "h": 192,
+    "anchorX": 0,
+    "loops": 1,
+    "moving": false,
+    "label": "Drag",
+    "kind": "base"
+   },
+   "sleep": {
+    "frames": 16,
+    "w": 192,
+    "h": 192,
+    "anchorX": 0,
+    "loops": 12,
+    "moving": false,
+    "label": "Sleep",
+    "kind": "base"
+   },
+   "chocolate": {
+    "frames": 16,
+    "w": 192,
+    "h": 192,
+    "anchorX": 0,
+    "loops": 2,
+    "moving": false,
+    "label": "Chocolate",
+    "kind": "idle"
+   },
+   "symbiote_lash": {
+    "frames": 24,
+    "w": 480,
+    "h": 192,
+    "anchorX": 0,
+    "loops": 1,
+    "moving": false,
+    "label": "Symbiote Lash",
+    "kind": "jutsu"
+   },
+   "we_are_venom": {
+    "frames": 24,
+    "w": 346,
+    "h": 192,
+    "anchorX": 0,
+    "loops": 1,
+    "moving": false,
+    "label": "We Are Venom",
+    "kind": "jutsu"
+   }
+  }
  }
 ];

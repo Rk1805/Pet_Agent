@@ -172,7 +172,8 @@ struct SpriteView: View {
 }
 
 private func eraLabel(_ era: String) -> String {
-    ["classic": "Part I", "shippuden": "Shippuden", "jonin": "Jonin", "sannin": "Sannin", "akatsuki": "Akatsuki"][era] ?? era.capitalized
+    ["classic": "Part I", "shippuden": "Shippuden", "jonin": "Jonin", "sannin": "Sannin", "akatsuki": "Akatsuki",
+     "hero": "Hero", "villain": "Villain"][era] ?? era.capitalized
 }
 
 // MARK: - root
@@ -239,16 +240,20 @@ private struct Pill: View {
 // MARK: - pets tab
 
 private enum Category: String, CaseIterable {
-    case all = "ALL", classic = "PART I", shippuden = "SHIPPUDEN", legends = "LEGENDS"
+    case all = "ALL", naruto = "NARUTO", spiderman = "SPIDER-MAN", heroes = "HEROES", villains = "VILLAINS"
     var icon: String {
-        switch self { case .all: return ""; case .classic: return "🍥 "; case .shippuden: return "🌀 "; case .legends: return "📜 " }
+        switch self {
+        case .all: return ""; case .naruto: return "🍥 "; case .spiderman: return "🕷 "
+        case .heroes: return "🦸 "; case .villains: return "😈 "
+        }
     }
     func includes(_ m: PetMeta) -> Bool {
         switch self {
         case .all: return true
-        case .classic: return m.era == "classic"
-        case .shippuden: return m.era == "shippuden"
-        case .legends: return m.era != "classic" && m.era != "shippuden"
+        case .naruto: return m.packID == "naruto"
+        case .spiderman: return m.packID == "spiderman"
+        case .heroes: return m.era != "villain" && m.era != "akatsuki"
+        case .villains: return m.era == "villain" || m.era == "akatsuki"
         }
     }
 }
@@ -287,7 +292,9 @@ private struct PetsTab: View {
 
                 HStack(spacing: 18) {
                     Text("More Pets").font(.system(size: 34, weight: .heavy))
-                    Pill(text: "🍥  Naruto pack", colors: [Color(hex: 0xffa53a), Color(hex: 0xff8a1f)])
+                    Button { category = .spiderman } label: {
+                        Pill(text: "🕷  New: Spider-Man pack", colors: [Color(hex: 0xff4a4a), Color(hex: 0xd62f6b)])
+                    }.buttonStyle(.plain)
                 }
                 .padding(.top, 30)
 
@@ -378,9 +385,12 @@ private struct MissionsTab: View {
     private let examples: [(String, [String])] = [
         ("🎵 Music", ["play Kesariya", "pause", "next song", "what's playing?"]),
         ("🗂 Apps & web", ["open Notes", "quit Safari", "open youtube", "search best ramen in Tokyo"]),
+        ("⌨️ Type for me", ["ask claude for a quick pasta recipe", "write a haiku about rain in notes", "type hello in claude"]),
+        ("🎮 Games", ["play batman", "launch cs2 on steam"]),
         ("⏰ Reminders", ["remind me in 20 minutes to stretch", "timer for 5 min"]),
         ("🖥 Mac", ["volume 30", "turn it down a bit", "dark mode", "battery?"]),
-        ("🇮🇳 Hindi", ["arijit singh ka gaana chalao", "notes kholo", "10 minute baad yaad dilana paani peena", "awaaz kam karo"]),
+        ("🇮🇳 Hindi", ["arijit singh ka gaana chalao", "notes kholo", "claude se pucho chawal kaise banaye", "steam pe batman khelo"]),
+        ("🕷 Pets", ["summon venom", "do a web swing", "dismiss doc ock"]),
     ]
 
     private func send(_ s: String) {
@@ -613,7 +623,7 @@ private struct AboutTab: View {
                     Label("Private: commands are understood on your Mac by a built-in parser and Apple Intelligence.", systemImage: "lock.fill")
                     Label("Light: about 25 MB of memory and ~2% CPU while pets roam.", systemImage: "leaf.fill")
                     Label("Speaks English, Hindi and Hinglish.", systemImage: "character.bubble.fill")
-                    Label("Characters: the Naruto pack (fan-made pixel art). More packs coming.", systemImage: "sparkles")
+                    Label("Characters: the Naruto and Spider-Man packs (fan-made pixel art).", systemImage: "sparkles")
                 }
                 .font(.system(size: 14))
                 .padding(20)

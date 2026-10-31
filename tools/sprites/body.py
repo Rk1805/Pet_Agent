@@ -277,6 +277,9 @@ def arm_layer(ch, spec, origin, side_key, view):
             bands(L, f0, lerp(e, w, 0.95), w1 + 0.8, scale(fore, 0.7), 1.2 * k)
     if o.get('elbow_pad'):
         L.ellipse(e[0], e[1], w1 / 2 + 0.8, w1 / 2 + 0.8, o['elbow_pad'])
+    if o.get('arm_web'):
+        web_limb(L, e if o.get('arm_web_from') == 'elbow' else s, lerp(e, w, 0.95),
+                 (w1 if o.get('arm_web_from') == 'elbow' else w0) + bag, w2 + bag, o['arm_web'], k)
     if o.get('mesh_wrist'):
         capsule(L, lerp(e, w, 0.7), lerp(e, w, 0.98), w2 + 0.8, w2 + 0.8, o['mesh_wrist'])
         bands(L, lerp(e, w, 0.7), lerp(e, w, 0.98), w2 + 0.8, scale(o['mesh_wrist'], 0.7), 1.2 * k)
@@ -357,9 +360,26 @@ def leg_layer(ch, spec, origin, view, side_key):
     if o.get('mesh_ankle'):
         capsule(L, lerp(kn, an, 0.7), an, w2 + 1.0, w2 + 1.0, o['mesh_ankle'])
         bands(L, lerp(kn, an, 0.7), an, w2 + 1.0, scale(o['mesh_ankle'], 0.7), 1.3 * k)
+    if o.get('leg_web'):
+        web_limb(L, kn if o.get('leg_web_from') == 'knee' else h, an,
+                 (w1 if o.get('leg_web_from') == 'knee' else w0) + bag, w2 + bag, o['leg_web'], k)
     draw_foot(L, ch, an, view, k)
     finish(L, right=2)
     return L
+
+
+def web_limb(L, p, q, w_start, w_end, col, k):
+    """Spider-suit webbing along a limb: one seam down the middle, rungs across it (inside the limb)."""
+    dx, dy = q[0] - p[0], q[1] - p[1]
+    d = math.hypot(dx, dy) or 1
+    nx, ny = -dy / d, dx / d
+    n = max(1, int(d / (3.6 * k)))
+    for i in range(1, n):
+        t = i / n
+        cx, cy = p[0] + dx * t, p[1] + dy * t
+        half = (w_start + (w_end - w_start) * t) * 0.42
+        L.line(cx - nx * half, cy - ny * half, cx + nx * half, cy + ny * half, col)
+    L.line(p[0], p[1], q[0], q[1], col)
 
 
 def draw_foot(L, ch, an, view, k):
@@ -526,6 +546,11 @@ def face_layer(ch, pose, hx, hy, fw, fh):
         L.put(hx + fw * 0.53, hy + fh * 0.73 + 1, scale(skin, 0.9))
     L.outline(0.3)
     f = Ctx(L, hx, hy, pose.view, pose, ch, sx=fw / 18, sy=fh / 21)
+    if getattr(ch, 'mask', None):
+        draw_mask(L, ch, pose, fw, fh, hx, hy)
+        if ch.marks:
+            ch.marks(f)
+        return L
     draw_brows(L, ch, pose, fw, fh, hx, hy)
     draw_eyes(L, ch, pose, fw, fh, hx, hy)
     draw_mouth(L, ch, pose, fw, fh, hx, hy)
@@ -536,6 +561,85 @@ def face_layer(ch, pose, hx, hy, fw, fh):
     if ch.marks:
         ch.marks(f)
     return L
+
+
+# Spider-style lens: points around the lens centre in lens units (screen-left eye; mirrored for the other).
+LENS = [(-0.5, -0.42), (-0.1, -0.52), (0.32, -0.4), (0.5, -0.05), (0.42, 0.32), (0.12, 0.5),
+        (-0.22, 0.42), (-0.48, 0.12)]
+JAGGED = [(-0.55, -0.5), (-0.1, -0.55), (0.45, -0.45), (0.55, 0.0), (0.3, 0.2), (0.45, 0.45),
+          (0.05, 0.3), (-0.05, 0.55), (-0.25, 0.25), (-0.5, 0.35), (-0.4, 0.0)]
+
+
+def draw_mask(L, ch, pose, fw, fh, hx, hy):
+    """Full-face mask (Spider-Man and friends): web lines, big lenses, optional Venom jaws.
+    ch.mask: lens, rim (None = no rim), web (None = plain), lens_w/lens_h, shape 'spider'|'venom', jaws."""
+    m = ch.mask
+    style = pose.eyes or ch.eyes
+    side = pose.view == 'side'
+    face = L.opaque(20)
+    if m.get('web'):
+        S = Layer(W, H)
+        cx, cy = hx + fw * (0.66 if side else 0.5), hy + fh * 0.62
+        for a in range(0, 360, 30):
+            r = math.radians(a + 15)
+            S.line(cx, cy, cx + math.cos(r) * fw, cy + math.sin(r) * fw, m['web'])
+        for rr in (0.28, 0.5, 0.74):
+            S.ring(cx, cy, fw * rr, m['web'], 1.0)
+        S.clip(face)
+        L.over(S)
+    shape = JAGGED if m.get('shape') == 'venom' else LENS
+    for i, (bx, by, ew, eh) in enumerate(eye_boxes(fw, fh, pose.view)):
+        mirror = -1 if i == 1 else 1
+        if side and i == 0:
+            continue                      # far lens hidden behind the head in profile
+        cx, cy = hx + bx, hy + by + eh * m.get('lens_dy', -0.25)
+        lw, lh = ew * m.get('lens_w', 1.55), eh * m.get('lens_h', 2.3)
+        if side:
+            lw *= 0.8
+        top_cut = {'angry': -0.12, 'focus': -0.2, 'half': 0.0}.get(style, -1.0)
+        if style in ('closed', 'sleepy'):
+            L.line(cx - lw * 0.45, cy + lh * 0.1, cx + lw * 0.45, cy + lh * 0.1, m.get('rim') or INK, 2)
+            continue
+        if style == 'happy':
+            pts = [(-0.5, 0.1), (0, -0.2), (0.5, 0.1), (0.4, 0.25), (0, 0.0), (-0.4, 0.25)]
+        else:
+            pts = [(x, max(y, top_cut)) for x, y in shape]
+        k = 1.15 if style == 'wide' else 1.0
+        P = [(cx + x * mirror * lw * k, cy + y * lh * k) for x, y in pts]
+        if m.get('rim'):
+            R = [(cx + x * mirror * lw * k * 1.3, cy + y * lh * k * 1.25) for x, y in pts]
+            L.poly(R, m['rim'])
+        L.poly(P, m.get('lens', '#f4f6fb'))
+        low = [(cx + x * mirror * lw * k * 0.8, cy + max(y, 0.18) * lh * k * 0.9) for x, y in pts]
+        L.poly(low, scale(m.get('lens', '#f4f6fb'), 0.86))
+    if m.get('jaws'):
+        draw_jaws(L, ch, pose, fw, fh, hx, hy, side)
+
+
+def draw_jaws(L, ch, pose, fw, fh, hx, hy, side):
+    """Venom's mouth: a wide grin of fangs; open poses show the tongue."""
+    mouth = pose.mouth or ch.mouth
+    open_ = mouth in ('open', 'shout', 'grin', 'o', 'chew')
+    x0, x1 = hx + fw * (0.3 if side else 0.08), hx + fw * (1.02 if side else 0.92)
+    y0 = hy + fh * 0.7
+    depth = fh * (0.34 if open_ else 0.12)
+    mid = (x0 + x1) / 2
+    L.poly([(x0, y0), (x1, y0 - fh * 0.04), (mid + (x1 - x0) * 0.25, y0 + depth),
+            (mid - (x1 - x0) * 0.25, y0 + depth)], '#3a0912')
+    n = 7
+    for j in range(n):
+        tx = x0 + (x1 - x0) * (j + 0.5) / n
+        tw = (x1 - x0) / n * 0.45
+        L.poly([(tx - tw, y0 - 0.5), (tx + tw, y0 - 0.5), (tx, y0 + depth * 0.45)], '#f6f4ee')
+        if open_:
+            by = y0 + depth
+            L.poly([(tx - tw * 0.8, by + 0.5), (tx + tw * 0.8, by + 0.5), (tx, by - depth * 0.4)], '#f6f4ee')
+    if mouth in ('shout', 'grin', 'open'):
+        tx = mid + (fw * 0.15 if side else 0)
+        L.poly([(tx - fw * 0.1, y0 + depth * 0.5), (tx + fw * 0.1, y0 + depth * 0.5),
+                (tx + fw * 0.14, y0 + depth + fh * 0.35), (tx, y0 + depth + fh * 0.45),
+                (tx - fw * 0.06, y0 + depth + fh * 0.3)], '#d9586f')
+        L.line(tx, y0 + depth * 0.6, tx + fw * 0.03, y0 + depth + fh * 0.35, '#a63650')
 
 
 def draw_brows(L, ch, pose, fw, fh, hx, hy):

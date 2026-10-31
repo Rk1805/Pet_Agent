@@ -687,6 +687,26 @@ def prop(L, name, x, y, f=0):
     elif name == 'shogi':
         c.poly([(-3, 2), (-3, -2), (0, -5), (3, -2), (3, 2)], '#e9c98a')
         c.rect(-1, -2, 1, 0, '#3a2a1a')
+    elif name == 'pizza':
+        bite = f >= 8
+        c.poly([(-3, -6), (3, -6), (0, 4)], '#f2c14e')
+        c.rect(-3.5, -7, 3.5, -6, '#c8863a')
+        for x, y in ((-1, -4), (1, -2.5), (0, 0)):
+            c.ellipse(x, y, 0.8, 0.7, '#c8322f')
+        if bite:
+            c.ellipse(1.8, -6.5, 1.4, 1.2, (0, 0, 0, 0))
+    elif name == 'tea':
+        c.rect(-2.5, -3, 2.5, 2, '#f2f0ea')
+        c.rect(-2.5, -3, 2.5, -2.5, '#8a5a2a')
+        c.ring(3.2, -0.5, 1.6, '#f2f0ea', 0.9) if hasattr(c, 'ring') else c.ellipse(3.5, -0.5, 1.2, 1.4, '#f2f0ea')
+        c.line(-0.5, -4.5, 0.5, -7, '#d9dde6')
+    elif name == 'chocolate':
+        c.rect(-2, -7, 2, 2, '#5a3220')
+        for y in (-5, -2, 1):
+            c.line(-2, y, 2, y, '#3e2014')
+        c.rect(-2, -1, 2, 2, '#c8322f')
+        if f >= 8:
+            c.ellipse(0, -7, 2.2, 1.6, (0, 0, 0, 0))
     S.cel(1)
     S.outline(0.35)
     L.over(S)

@@ -143,11 +143,13 @@ def sleep(ch):
 
 SNACK_ID = {'ramen': 'ramen', 'chips': 'chips', 'tomato': 'tomato', 'dango': 'dango',
             'sake': 'sake', 'book': 'read', 'notebook': 'research', 'flower': 'flower',
-            'cinnamon_roll': 'cinnamon_roll', 'shogi': 'shogi'}
+            'cinnamon_roll': 'cinnamon_roll', 'shogi': 'shogi', 'pizza': 'pizza', 'tea': 'tea_break',
+            'chocolate': 'chocolate'}
 SNACK_LABEL = {'ramen': 'Ichiraku Ramen', 'chips': 'Potato Chips', 'tomato': 'Tomato Snack',
                'dango': 'Dango Break', 'sake': 'Sake', 'book': 'Reading Icha Icha',
                'notebook': '"Research"', 'flower': 'Flower Shop',
-               'cinnamon_roll': 'Cinnamon Roll', 'shogi': 'Shogi Strategy'}
+               'cinnamon_roll': 'Cinnamon Roll', 'shogi': 'Shogi Strategy', 'pizza': 'Pizza Slice',
+               'tea': 'Tea Break', 'chocolate': 'Chocolate'}
 HOLD_L = (-12, 115)                 # left forearm across the body, hand at the stomach
 TO_MOUTH_R = (150, 132)             # elbow up and out, hand brought in to the mouth
 LOW_R = (12, -40)
@@ -941,6 +943,10 @@ JUTSU = {
 }
 
 SUSANOO_COLOR = {'sasuke_shippuden': '#8a4fd8', 'itachi': '#ff5a3a'}
+
+
+from spider import MOVES as _SPIDER_MOVES  # noqa: E402  (Spider-Man pack moves)
+JUTSU.update(_SPIDER_MOVES)
 
 
 def build_all(ch):

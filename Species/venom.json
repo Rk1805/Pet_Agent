@@ -1,0 +1,67 @@
+{
+  "animations": [
+    {
+      "id": "front",
+      "position": "fromEntityBottomLeft",
+      "requiredLoops": 3
+    },
+    {
+      "id": "sleep",
+      "position": "fromEntityBottomLeft",
+      "requiredLoops": 12
+    },
+    {
+      "id": "chocolate",
+      "position": "fromEntityBottomLeft",
+      "requiredLoops": 2
+    },
+    {
+      "id": "symbiote_lash",
+      "position": "fromEntityBottomLeft",
+      "requiredLoops": 1,
+      "size": [
+        2.5,
+        1.0
+      ]
+    },
+    {
+      "id": "we_are_venom",
+      "position": "fromEntityBottomLeft",
+      "requiredLoops": 1,
+      "size": [
+        1.802,
+        1.0
+      ]
+    }
+  ],
+  "capabilities": [
+    "AnimatedSprite",
+    "AnimationsProvider",
+    "AutoRespawn",
+    "BounceOnLateralCollisions",
+    "Draggable",
+    "FlipHorizontallyWhenGoingLeft",
+    "Gravity",
+    "LinearMovement",
+    "PetsSpritesProvider",
+    "AnimationsScheduler",
+    "Rotating",
+    "ShowsMenuOnRightClick",
+    "TrapEscaper",
+    "PlatformLooper",
+    "TeleportationPortal"
+  ],
+  "dragPath": "drag",
+  "fps": 10,
+  "zIndex": 0,
+  "scale": 1,
+  "tags": [
+    "spiderman",
+    "villain"
+  ],
+  "id": "venom",
+  "groupCategory": "venom",
+  "colorHex": "8c8ca8",
+  "movementPath": "walk",
+  "speed": 0.55
+}

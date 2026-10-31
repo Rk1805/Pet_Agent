@@ -22,7 +22,7 @@ class Character:
                  headgear=None, back_item=None, collar=None, eyes='open', mouth='flat',
                  color='#ff8800', build='male', jutsu=(), snack=None, speed=0.5, tagline='',
                  group=None, brows=None, brow_color='#3a2a22', pale_eyes=False, size=1.0, head=1.0,
-                 hair_color='#333333', one_sharingan=False, art=None):
+                 hair_color='#333333', one_sharingan=False, art=None, mask=None, pack='naruto'):
         self.id, self.name, self.era = id, name, era
         self.skin, self.iris = skin, iris
         self.hair, self.outfit, self.torso = hair, outfit, torso
@@ -34,6 +34,7 @@ class Character:
         self.size, self.head, self.hair_color = size, head, hair_color
         self.one_sharingan = one_sharingan
         self.art = art or f'{id}.png'
+        self.mask, self.pack = mask, pack
 
 
 # =================================================================== helpers
@@ -845,4 +846,5 @@ ITACHI = Character(
 
 CHARACTERS = [NARUTO, NARUTO_S, SASUKE, SASUKE_S, SAKURA, SAKURA_S, SHIKAMARU, SHIKAMARU_S,
               INO, INO_S, CHOJI, CHOJI_S, HINATA, HINATA_S, KAKASHI, JIRAIYA, TSUNADE, ITACHI]
+# The Spider-Man pack (spider.py) appends itself to CHARACTERS / BY_ID when imported (anims.py does).
 BY_ID = {c.id: c for c in CHARACTERS}

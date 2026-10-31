@@ -1,4 +1,5 @@
 import AppKit
+import ApplicationServices
 
 /// Result of an action: a short message for the model / speech bubble, and whether it failed.
 struct ActionResult {
@@ -71,7 +72,7 @@ enum Mac {
         return apps.first { base($0) == q }
             ?? apps.first { base($0).hasPrefix(q) }
             ?? apps.first { base($0).contains(q) }
-            ?? apps.first { q.contains(base($0)) && base($0).count >= 4 }
+            ?? apps.first { q.split(separator: " ").count <= 3 && q.contains(base($0)) && base($0).count >= 4 }
     }
 
     static func openApp(_ name: String) async -> ActionResult {
@@ -101,6 +102,18 @@ enum Mac {
     }
 
     // MARK: misc system
+
+    static func openURL(_ raw: String, in appName: String) async -> ActionResult {
+        guard !appName.isEmpty else { return openURL(raw) }
+        guard let app = findApp(appName) else { return .fail("No app called \"\(appName)\" is installed.") }
+        var s = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !s.contains("://") { s = "https://" + s }
+        guard let url = URL(string: s) else { return .fail("That doesn't look like a link: \(raw)") }
+        do {
+            _ = try await NSWorkspace.shared.open([url], withApplicationAt: app, configuration: NSWorkspace.OpenConfiguration())
+            return .ok("Opened \(s) in \(app.deletingPathExtension().lastPathComponent).")
+        } catch { return .fail("Couldn't open it: \(error.localizedDescription)") }
+    }
 
     static func openURL(_ raw: String) -> ActionResult {
         var s = raw.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -293,5 +306,168 @@ enum Spotify {
         }
         let r = await Mac.osascript("tell application \"Spotify\" to \(cmd)")
         return r.ok ? .ok("Spotify: \(action.replacingOccurrences(of: "_", with: " ")).") : .fail("Spotify said: \(r.out)")
+    }
+}
+
+// MARK: - typing & keyboard shortcuts (needs Accessibility permission)
+
+enum Keyboard {
+    /// True when macOS lets us send keystrokes. Asks (opens System Settings) when `prompt` is set.
+    static func allowed(prompt: Bool) -> Bool {
+        if AXIsProcessTrusted() { return true }
+        if prompt {
+            let opts = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true] as CFDictionary
+            _ = AXIsProcessTrustedWithOptions(opts)
+        }
+        return false
+    }
+
+    static let permissionMessage = "I need Accessibility permission to type for you. I opened System Settings: " +
+        "turn on Pet Agents under Privacy & Security → Accessibility, then ask again."
+
+    private static let codes: [String: CGKeyCode] = [
+        "a": 0, "s": 1, "d": 2, "f": 3, "h": 4, "g": 5, "z": 6, "x": 7, "c": 8, "v": 9, "b": 11, "q": 12,
+        "w": 13, "e": 14, "r": 15, "y": 16, "t": 17, "1": 18, "2": 19, "3": 20, "4": 21, "6": 22, "5": 23,
+        "=": 24, "9": 25, "7": 26, "-": 27, "8": 28, "0": 29, "]": 30, "o": 31, "u": 32, "[": 33, "i": 34,
+        "p": 35, "l": 37, "j": 38, "'": 39, "k": 40, ";": 41, "\\": 42, ",": 43, "/": 44, "n": 45, "m": 46,
+        ".": 47, "`": 50, "return": 36, "enter": 36, "tab": 48, "space": 49, "delete": 51, "backspace": 51,
+        "escape": 53, "esc": 53, "left": 123, "right": 124, "down": 125, "up": 126, "home": 115, "end": 119,
+        "pageup": 116, "pagedown": 121, "f11": 103, "f12": 111,
+    ]
+
+    /// Press a combination like "cmd+shift+t", "return" or "escape".
+    static func press(_ combo: String) -> Bool {
+        var flags: CGEventFlags = []
+        var key: CGKeyCode?
+        for raw in combo.lowercased().replacingOccurrences(of: " ", with: "").split(separator: "+") {
+            switch raw {
+            case "cmd", "command", "⌘": flags.insert(.maskCommand)
+            case "shift", "⇧": flags.insert(.maskShift)
+            case "opt", "option", "alt", "⌥": flags.insert(.maskAlternate)
+            case "ctrl", "control", "⌃": flags.insert(.maskControl)
+            default: key = codes[String(raw)]
+            }
+        }
+        guard let key else { return false }
+        let src = CGEventSource(stateID: .combinedSessionState)
+        for down in [true, false] {
+            let e = CGEvent(keyboardEventSource: src, virtualKey: key, keyDown: down)
+            e?.flags = flags
+            e?.post(tap: .cghidEventTap)
+        }
+        return true
+    }
+
+    /// Paste text into the focused field (works for any language), then put the clipboard back.
+    static func paste(_ text: String) async {
+        let pb = NSPasteboard.general
+        let saved: [[(NSPasteboard.PasteboardType, Data)]] = (pb.pasteboardItems ?? []).map { item in
+            item.types.compactMap { t in item.data(forType: t).map { (t, $0) } }
+        }
+        pb.clearContents()
+        pb.setString(text, forType: .string)
+        _ = press("cmd+v")
+        await Mac.sleep(0.6)
+        pb.clearContents()
+        let items = saved.map { pairs -> NSPasteboardItem in
+            let item = NSPasteboardItem()
+            for (t, d) in pairs { item.setData(d, forType: t) }
+            return item
+        }
+        if !items.isEmpty { pb.writeObjects(items) }
+    }
+
+    /// Bring an app to the front (launching it if needed) and wait until it is ready for typing.
+    static func focus(app name: String) async -> ActionResult? {
+        guard let url = Mac.findApp(name), let bundle = Bundle(url: url)?.bundleIdentifier else {
+            return .fail("No app called \"\(name)\" is installed.")
+        }
+        let wasRunning = NSWorkspace.shared.runningApplications.contains { $0.bundleIdentifier == bundle }
+        let cfg = NSWorkspace.OpenConfiguration()
+        cfg.activates = true
+        _ = try? await NSWorkspace.shared.openApplication(at: url, configuration: cfg)
+        for _ in 0..<40 where NSWorkspace.shared.frontmostApplication?.bundleIdentifier != bundle {
+            await Mac.sleep(0.25)
+            NSWorkspace.shared.runningApplications.first { $0.bundleIdentifier == bundle }?.activate()
+        }
+        guard NSWorkspace.shared.frontmostApplication?.bundleIdentifier == bundle else {
+            return .fail("\(name) didn't come to the front.")
+        }
+        await Mac.sleep(wasRunning ? 0.5 : 3.0)    // a freshly launched app needs time to draw its window
+        return nil
+    }
+}
+
+// MARK: - Steam games
+
+enum Steam {
+    struct Game { let id: String; let name: String }
+
+    private static var root: URL {
+        FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent("Library/Application Support/Steam")
+    }
+
+    private static func field(_ key: String, in text: String) -> [String] {
+        guard let re = try? NSRegularExpression(pattern: "\"\(key)\"\\s+\"([^\"]*)\"") else { return [] }
+        return re.matches(in: text, range: NSRange(text.startIndex..., in: text)).compactMap {
+            Range($0.range(at: 1), in: text).map { String(text[$0]) }
+        }
+    }
+
+    /// Installed games from every Steam library (appmanifest_*.acf files).
+    static func installed() -> [Game] {
+        var libraries = [root]
+        if let vdf = try? String(contentsOf: root.appendingPathComponent("steamapps/libraryfolders.vdf"), encoding: .utf8) {
+            libraries += field("path", in: vdf).map { URL(fileURLWithPath: $0) }
+        }
+        var games: [String: Game] = [:]
+        for lib in libraries {
+            let dir = lib.appendingPathComponent("steamapps")
+            guard let files = try? FileManager.default.contentsOfDirectory(atPath: dir.path) else { continue }
+            for f in files where f.hasPrefix("appmanifest_") && f.hasSuffix(".acf") {
+                guard let text = try? String(contentsOf: dir.appendingPathComponent(f), encoding: .utf8),
+                      let id = field("appid", in: text).first, let name = field("name", in: text).first else { continue }
+                if ["redistributable", "steamworks", "proton", "sdk", "runtime"].contains(where: name.lowercased().contains) { continue }
+                games[id] = Game(id: id, name: name)
+            }
+        }
+        return games.values.sorted { $0.name < $1.name }
+    }
+
+    private static func norm(_ s: String) -> String {
+        s.lowercased().filter { $0.isLetter || $0.isNumber }
+    }
+
+    /// "cs2" → "Counter-Strike 2", "arkham city" → "Batman: Arkham City GOTY".
+    static func find(_ query: String) -> Game? {
+        let q = norm(query.replacingOccurrences(of: "the game", with: ""))
+        guard !q.isEmpty else { return nil }
+        let games = installed()
+        func initials(_ name: String) -> String {
+            name.lowercased().split { !$0.isLetter && !$0.isNumber }
+                .map { w in w.allSatisfy(\.isNumber) ? String(w) : String(w.prefix(1)) }.joined()
+        }
+        return games.first { norm($0.name) == q }
+            ?? games.first { norm($0.name).hasPrefix(q) }
+            ?? games.first { q.count >= 3 && norm($0.name).contains(q) }
+            ?? games.first { initials($0.name) == q }
+            ?? games.first { g in   // most query words appear in the name
+                let words = query.lowercased().split { !$0.isLetter && !$0.isNumber }.map(String.init).filter { $0.count > 2 }
+                return !words.isEmpty && words.filter { norm(g.name).contains($0) }.count * 2 > words.count
+            }
+    }
+
+    static func launch(_ query: String) -> ActionResult {
+        if let g = find(query) {
+            NSWorkspace.shared.open(URL(string: "steam://rungameid/\(g.id)")!)
+            return .ok("Launching \(g.name) on Steam.")
+        }
+        let names = installed().map(\.name)
+        let enc = query.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? query
+        if NSWorkspace.shared.urlForApplication(withBundleIdentifier: "com.valvesoftware.steam") != nil {
+            NSWorkspace.shared.open(URL(string: "steam://openurl/https://store.steampowered.com/search/?term=\(enc)")!)
+        }
+        let list = names.isEmpty ? "No Steam games are installed." : "Installed: \(names.joined(separator: ", "))."
+        return .fail("\(query) isn't installed, so I opened it in the Steam store. \(list)")
     }
 }

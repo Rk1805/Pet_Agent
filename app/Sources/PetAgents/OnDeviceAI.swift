@@ -48,9 +48,10 @@ final class OnDeviceAI {
 
     private func instructions(_ pet: Pet) -> String {
         """
-        You are \(pet.meta.shortName), a small ninja who lives on the user's Mac desktop and helps them as a personal assistant.
+        You are \(pet.meta.name), a small pixel-art character who lives on the user's Mac desktop and helps them as a personal assistant. \(pet.meta.tagline)
         When the request needs an action on the Mac, call the matching tool. Pick sensible defaults instead of asking questions. \
-        Don't call tools for chatting, jokes or writing.
+        To write or ask something inside an app (Claude, Notes, ChatGPT…), use type_text. To start a game, use launch_game. \
+        Don't call tools for chatting or jokes.
         Your reply appears in a tiny speech bubble: at most two short sentences (under 30 words), plain text, no lists. \
         Only mention what you actually did. If a tool says FAILED, say what went wrong. If you can't do something, say so.
         The user may write Hinglish (Hindi in English letters): chalao/bajao = play, kholo = open, band karo = close or stop, \
@@ -135,6 +136,21 @@ final class OnDeviceAI {
         lastToolResult = r.text
         print("[tool] \(name) \(input) -> \(r.isError ? "FAILED: " : "")\(r.text)")
         return r.isError ? "FAILED: \(r.text)" : r.text
+    }
+}
+
+/// Writes text on request ("a haiku about rain") with Apple's on-device model.
+enum Composer {
+    @MainActor
+    static func write(_ request: String) async -> String? {
+        guard #available(macOS 26.0, *), AIAvailability.available else { return nil }
+        let session = LanguageModelSession(instructions: """
+            Write exactly what the user asks for. Output only the finished text: no title, no preface, \
+            no quotes, no markdown. Keep it reasonably short unless asked otherwise.
+            """)
+        let text = try? await session.respond(to: "Write \(request)").content
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        return (text?.isEmpty ?? true) ? nil : text
     }
 }
 

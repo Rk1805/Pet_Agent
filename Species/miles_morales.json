@@ -1,0 +1,73 @@
+{
+  "animations": [
+    {
+      "id": "front",
+      "position": "fromEntityBottomLeft",
+      "requiredLoops": 3
+    },
+    {
+      "id": "sleep",
+      "position": "fromEntityBottomLeft",
+      "requiredLoops": 12
+    },
+    {
+      "id": "web_swing",
+      "position": "fromEntityBottomLeft",
+      "requiredLoops": 1,
+      "size": [
+        1.5,
+        1.5
+      ],
+      "isMoving": true
+    },
+    {
+      "id": "venom_strike",
+      "position": "fromEntityBottomLeft",
+      "requiredLoops": 1,
+      "size": [
+        2.0,
+        1.0
+      ]
+    },
+    {
+      "id": "camouflage",
+      "position": "fromEntityBottomLeft",
+      "requiredLoops": 1
+    },
+    {
+      "id": "vibing",
+      "position": "fromEntityBottomLeft",
+      "requiredLoops": 2
+    }
+  ],
+  "capabilities": [
+    "AnimatedSprite",
+    "AnimationsProvider",
+    "AutoRespawn",
+    "BounceOnLateralCollisions",
+    "Draggable",
+    "FlipHorizontallyWhenGoingLeft",
+    "Gravity",
+    "LinearMovement",
+    "PetsSpritesProvider",
+    "AnimationsScheduler",
+    "Rotating",
+    "ShowsMenuOnRightClick",
+    "TrapEscaper",
+    "PlatformLooper",
+    "TeleportationPortal"
+  ],
+  "dragPath": "drag",
+  "fps": 10,
+  "zIndex": 0,
+  "scale": 1,
+  "tags": [
+    "spiderman",
+    "hero"
+  ],
+  "id": "miles_morales",
+  "groupCategory": "miles_morales",
+  "colorHex": "e0262f",
+  "movementPath": "walk",
+  "speed": 0.75
+}

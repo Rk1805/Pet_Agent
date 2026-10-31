@@ -52,7 +52,7 @@ def species_json(ch, built):
         'fps': 10,
         'zIndex': 0,
         'scale': 1,
-        'tags': ['naruto', ch.era],
+        'tags': [ch.pack, ch.era],
         'id': ch.id,
         'groupCategory': ch.group,
         'colorHex': ch.color.lstrip('#'),
@@ -70,7 +70,7 @@ def export(ch):
         for old in d.glob(f'{ch.id}_*.png'):
             if not any(old.name.startswith(o + '_') for o in others):
                 old.unlink()
-    meta = {'id': ch.id, 'name': ch.name, 'era': ch.era, 'color': ch.color,
+    meta = {'id': ch.id, 'name': ch.name, 'era': ch.era, 'pack': ch.pack, 'color': ch.color,
             'tagline': ch.tagline, 'speed': ch.speed, 'group': ch.group, 'animations': {}}
     for a in built:
         for n, fr in enumerate(a.frames):

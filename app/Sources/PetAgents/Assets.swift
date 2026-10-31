@@ -21,6 +21,9 @@ struct PetMeta: Decodable {
     let speed: Double
     let group: String
     let animations: [String: AnimMeta]
+    let pack: String?          // "naruto", "spiderman", … (older manifests have none: Naruto)
+
+    var packID: String { pack ?? "naruto" }
 
     var displayName: String {
         switch era {

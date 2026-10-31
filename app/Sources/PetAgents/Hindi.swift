@@ -76,6 +76,23 @@ enum Hindi {
             let label = strip(t, [NSRegularExpression.escapedPattern(for: g[0]), remind, word(#"mujhe|muje|ki|ke\s*liye|ka|timer|laga\s*(?:o|do)|मुझे|कि|के\s*लिए"#)])
             return label.isEmpty ? "timer for \(amount)" : "remind me in \(amount) to \(label)"
         }
+        // Typing into apps: "claude mein hello likho", "claude se pucho chawal kaise banaye"
+        if let g = m(t, #"^(claude|chatgpt|perplexity|gemini)\s*(?:se|से|ko|को)\s*(?:pucho|poocho|puchho|puchiye|पूछो|बोलो|bolo)\s+(.+)$"#)
+            ?? m(t, #"^(.+?)\s+(claude|chatgpt|perplexity)\s*(?:se|से)\s*(?:pucho|poocho|puchho|पूछो)$"#).map({ [$0[0], $0[2], $0[1]] }) {
+            return "ask \(g[1]) \(g[2])"
+        }
+        if let g = m(t, #"^([\w .+-]{2,30}?)\s+(?:mein|me|mai|में|par|pe|पर|पे)\s+(.+?)\s+(?:likho|likh\s*do|likhiye|type\s*kar\s*(?:o|do)?|लिखो|लिख\s*दो|टाइप\s*करो)(\s*(?:aur|और)\s*(?:send|bhejo|भेजो)\s*(?:kar\s*do|karo)?)?$"#) {
+            return "type \(g[2]) in \(g[1])" + (g[3].isEmpty ? "" : " and send")
+        }
+        // Games: "steam pe batman khelo", "arkham city game chalao"
+        if m(t, #"khelo|khel\s*do|खेलो|steam|स्टीम|\bgame\b|गेम"#) != nil, m(t, play + "|khelo|khel\\s*do|खेलो|" + open) != nil {
+            let what = strip(t, [#"(?:steam|स्टीम)\s*(?:pe|par|pr|mein|me|पे|पर|में)?"#, word(#"game|गेम|wala|वाला|ka|का"#),
+                                 #"khelo|khel\s*do|खेलो"#, play, open])
+            if !what.isEmpty { return "play \(what) on steam" }
+        }
+        // Characters: "venom ko bulao", "doc ock ko bhejo"
+        if let g = m(t, #"^(.+?)\s+(?:ko|को)\s+(?:bulao|bula\s*do|बुलाओ|बुला\s*दो)$"#) { return "summon \(g[1])" }
+        if let g = m(t, #"^(.+?)\s+(?:ko|को)\s+(?:bhejo|bhej\s*do|hatao|भेजो|हटाओ)$"#) { return "dismiss \(g[1])" }
         // Music controls
         if m(t, #"^(?:agla|agli|next|अगला)\b"#) != nil || m(t, #"skip\s*kar"#) != nil { return "next" }
         if m(t, #"^(?:pichla|pichhla|previous|पिछला)\b"#) != nil { return "previous" }

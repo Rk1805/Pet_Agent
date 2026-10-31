@@ -1,7 +1,11 @@
 # Pet Agents
 
-Desktop pets that are also your on-device assistant. The first character pack is the
-**Naruto pack**: Naruto desktop pets in the style of Pet Therapy: full-length pixel-art sprites of the
+Desktop pets that are also your on-device assistant. Two character packs so far:
+
+- **Naruto pack:** 18 ninja (below).
+- **Spider-Man pack:** Spider-Man, Miles Morales, Spider-Gwen, Doctor Octopus, Green Goblin and Venom.
+
+The Naruto pack: Naruto desktop pets in the style of Pet Therapy: full-length pixel-art sprites of the
 characters on `art/source/character_sheet.png` (about 170px tall) that walk along the bottom
 of the screen and on top of windows,
 can be picked up and dragged, and now and then pull off their signature jutsu.
@@ -49,14 +53,16 @@ A Pets Therapy–style window with a tab bar:
 | Ask for… | Example |
 | --- | --- |
 | Music (Spotify) | "play Blinding Lights by The Weeknd", "pause", "next song", "what's playing?", "shuffle on" |
-| Apps | "open Notes", "launch VS Code", "quit Safari" |
+| Apps | "open Notes", "launch VS Code", "quit Safari", "open github.com in Safari" |
+| Type for you | "type hello in claude", "ask claude for a pasta recipe", "open a new chat in claude and ask it …", "write a haiku about rain in notes" (the pet writes it first), "close this tab in safari" |
+| Games | "play batman", "launch cs2 on steam": finds installed Steam games (every library) and starts them; not installed opens the Steam store |
 | Timers / reminders | "remind me in 25 minutes to take a break", "timer for 10 min" |
 | Web | "open github.com", "search best ramen in Tokyo", "youtube lofi beats" |
 | Files | "open my downloads" |
 | Mac | "volume 30", "mute", "dark mode", "battery?" |
 | Apple Shortcuts | "run my Morning shortcut" (anything you have built in Shortcuts) |
 | The pets | "do a rasengan", "summon Itachi", "dismiss Sakura" |
-| Hindi / Hinglish | "arijit singh ka gaana chalao", "notes kholo", "10 minute baad yaad dilana paani peena", "awaaz kam karo", "केसरिया बजाओ" |
+| Hindi / Hinglish | "claude mein hello likho", "claude se pucho chawal kaise banaye", "steam pe batman khelo", "venom ko bulao", "arijit singh ka gaana chalao", "notes kholo", "10 minute baad yaad dilana paani peena", "awaaz kam karo", "केसरिया बजाओ" |
 
 **How it understands you** (everything stays on your Mac, no API keys, no downloads):
 
@@ -87,12 +93,14 @@ pet moves and at 10 fps when they all stand still, and only re-reads window posi
 while a pet is falling or standing on a window.
 
 **Permissions:** the first time the pet controls Spotify or System Events, macOS asks you to
-allow it (System Settings → Privacy & Security → Automation). The build is ad-hoc signed, so
+allow it (System Settings → Privacy & Security → Automation). Typing into apps and keyboard
+shortcuts need **Accessibility** (Privacy & Security → Accessibility → Pet Agents); the pet opens
+that page the first time. The build is ad-hoc signed, so
 macOS may ask again after a rebuild.
 
 Settings are stored in `~/Library/Application Support/PetAgents/config.json` (mode 600).
 For testing, `PetAgents.app/Contents/MacOS/PetAgents --mission "play lofi"` runs a mission
-at launch and prints the result, and `--snapshot <folder>` renders each Home tab to PNG.
+at launch and prints the result (add `PETAGENTS_DRYRUN=1` to log the actions instead of doing them), and `--snapshot <folder>` renders each Home tab to PNG.
 
 | File in `app/Sources/PetAgents/` | What it does |
 | --- | --- |
@@ -136,7 +144,22 @@ open "preview/index.html?all"    # summons everyone
 - **Drag the windows** around: pets walk on top of them and fall off the edges
 - The **Gallery** tab plays any animation of any character on demand
 
-## The cast
+## The Spider-Man pack
+
+| Character | Side | Moves | Idle |
+| --- | --- | --- | --- |
+| Spider-Man | Hero | Web Swing (travels across the screen), Web Shooter | Pizza slice |
+| Miles Morales | Hero | Web Swing, Venom Strike, Camouflage | Headphones on |
+| Spider-Gwen | Hero | Web Swing, Web Shooter | Drum practice |
+| Doctor Octopus | Villain | Tentacle Slam, Rise of the Arms (lifted on two tentacles) | Tea break |
+| Green Goblin | Villain | Pumpkin Bomb, Goblin Glider (flies across the screen) | Evil cackle |
+| Venom | Villain | Symbiote Lash, "We Are Venom!" | Chocolate |
+
+Defined in `tools/sprites/spider.py` (designs, effects and moves). Masked faces (lenses, web
+lines, Venom's jaws) and suit webbing on arms and legs are rig features in `body.py`
+(`Character(mask=…)`, outfit `arm_web` / `leg_web`), so more masked heroes are easy to add.
+
+## The Naruto cast
 
 Base animations for everyone: `front` (idle), `walk`, `drag`, `sleep`, plus one
 personal idle (snack / hobby).

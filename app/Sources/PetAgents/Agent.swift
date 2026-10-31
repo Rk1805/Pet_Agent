@@ -108,6 +108,34 @@ enum LocalCommands {
         if match(lower, #"^(next|skip)( this)?( song| track)?$"#) != nil { return await call("spotify_control", ["action": "next"]) }
         if match(lower, #"^(previous|go back|last)( song| track)?$"#) != nil { return await call("spotify_control", ["action": "previous"]) }
         if match(lower, #"(what'?s|what is) (playing|this song)|now playing"#) != nil { return await call("spotify_control", ["action": "now_playing"]) }
+        // Typing into apps: "type hello in claude", "in notes write buy milk", "ask claude how to cook rice"
+        if let g = match(t, #"^ask\s+(claude|chatgpt|chat gpt|perplexity|gemini)\s+(?:to\s+|about\s+|if\s+|whether\s+)?(.+)$"#) {
+            return await call("type_text", ["app": g[0].replacingOccurrences(of: " ", with: ""), "text": g[1], "submit": true])
+        }
+        // "open (a new chat in) claude and ask (it) for X"
+        if let g = match(t, #"^(?:open\s+)?(a\s+)?(new\s+chat\s+(?:in|on)\s+)?(claude|chatgpt|chat gpt|perplexity)\s+and\s+ask\s+(?:it\s+)?(?:for\s+|to\s+|about\s+)?(.+)$"#) {
+            return await call("type_text", ["app": g[2].replacingOccurrences(of: " ", with: ""), "text": g[3], "submit": true,
+                                            "new_chat": !g[1].isEmpty])
+        }
+        if let g = match(t, #"^(?:type|write|paste|enter)\s+["“']?(.+?)["”']?\s+(?:in|into|on)\s+(?:the\s+)?([\w .+-]{2,30}?)(?:\s+app)?(\s+and\s+(?:send|submit|enter|press enter|hit enter)(?:\s+it)?)?$"#),
+           Mac.findApp(g[1]) != nil || ["claude", "chatgpt", "perplexity"].contains(g[1].lowercased()) {
+            return await call("type_text", ["app": g[1], "text": g[0], "submit": !g[2].isEmpty, "compose": Self.isWritingRequest(g[0])])
+        }
+        if let g = match(t, #"^(?:in|on)\s+([\w .+-]{2,30}?),?\s+(?:type|write)\s+["“']?(.+?)["”']?(\s+and\s+(?:send|submit|enter)(?:\s+it)?)?$"#),
+           Mac.findApp(g[0]) != nil {
+            return await call("type_text", ["app": g[0], "text": g[1], "submit": !g[2].isEmpty, "compose": Self.isWritingRequest(g[1])])
+        }
+        if let g = match(t, #"^type\s+["“']?(.+?)["”']?$"#) { return await call("type_text", ["app": "", "text": g[0]]) }
+        if let g = match(t, #"^open\s+(\S+\.\S+)\s+(?:in|with|on)\s+([\w .]+)$"#) {
+            return await call("open_url", ["url": g[0], "app": g[1]])
+        }
+        // Games: "play arkham city on steam", "launch cs2", "open batman"
+        if let g = match(t, #"^(?:play|launch|start|open|run)\s+(.+?)\s+(?:on|in|from|via|using)\s+steam$"#) {
+            return await call("launch_game", ["name": g[0]])
+        }
+        if let g = match(t, #"^(?:play|launch|start|open|run)\s+(?:the\s+)?(?:game\s+)?(.+?)(?:\s+game)?$"#), Steam.find(g[0]) != nil {
+            return await call("launch_game", ["name": g[0]])
+        }
         if let g = match(t, #"^(?:play|put on|listen to)\s+(?:the\s+)?(?:song\s+)?(.+?)(?:\s+on spotify)?$"#),
            match(g[0].lowercased(), #"^(something|some|anything|a song|music)\b"#) == nil {   // vague requests go to the model
             return await call("spotify_play", ["query": g[0]])
@@ -167,7 +195,15 @@ enum LocalCommands {
                 return await call("perform_animation", ["animation": id])
             }
         }
-        if match(lower, #"^(do )?(a |your )?(random )?jutsu$"#) != nil { pet.randomJutsu(); return ("Believe it!", true) }
+        if match(lower, #"^(do )?(a |your )?(random )?(jutsu|move|trick)$"#) != nil { pet.randomJutsu(); return ("Believe it!", true) }
+        // Someone else's move ("do a web swing" asked of Naruto): say who can do it.
+        let wanted = lower.replacingOccurrences(of: #"^(?:do|use|show me)\s+(?:a\s+|an\s+|the\s+|your\s+)?"#, with: "",
+                                                options: .regularExpression)
+        if wanted != lower, let other = Assets.pets.first(where: { m in
+            m.animations.contains { id, a in a.kind != "base" && (a.label.lowercased() == wanted || id.replacingOccurrences(of: "_", with: " ") == wanted) }
+        }) {
+            return ("That's \(other.name)'s move! Say \"summon \(other.name)\" and ask them.", false)
+        }
         return nil
     }
 
@@ -180,8 +216,24 @@ enum LocalCommands {
         "यूट्यूब": "https://www.youtube.com", "गूगल": "https://www.google.com",
     ]
 
-    static func findNinja(_ q: String) -> PetMeta? {
-        let q = q.lowercased()
+    /// "a haiku about rain", "an email to my boss…" ask the pet to write something, not to type those words.
+    static func isWritingRequest(_ text: String) -> Bool {
+        match(text.lowercased(), #"^(?:me\s+)?(?:a|an|some|two|three|short|quick)\s+(?:\w+\s+){0,2}(?:haiku|poem|email|mail|story|joke|note|message|paragraph|summary|letter|reply|tweet|list|essay|caption|bio|song|limerick|description)s?\b"#) != nil
+    }
+
+    private static let nicknames: [String: String] = [
+        "spiderman": "spider_man", "peter": "spider_man", "peterparker": "spider_man", "spidey": "spider_man",
+        "miles": "miles_morales", "spiderwoman": "spider_gwen", "gwen": "spider_gwen", "ghostspider": "spider_gwen",
+        "spidergwen": "spider_gwen", "docock": "doc_ock", "doctoroctopus": "doc_ock", "octopus": "doc_ock",
+        "ock": "doc_ock", "goblin": "green_goblin", "greengoblin": "green_goblin", "normanosborn": "green_goblin",
+        "eddie": "venom", "eddiebrock": "venom",
+    ]
+
+    static func findNinja(_ raw: String) -> PetMeta? {
+        let q = raw.lowercased().replacingOccurrences(of: #"^(the|mr\.?|dr\.?)\s+"#, with: "", options: .regularExpression)
+        let key = q.filter { $0.isLetter }
+        if let id = nicknames[key], let m = Assets.byId[id] { return m }
+        if let m = Assets.pets.first(where: { $0.name.lowercased().filter(\.isLetter) == key }) { return m }
         let wantsShippuden = q.contains("shippuden")
         let name = q.replacingOccurrences(of: "shippuden", with: "").trimmingCharacters(in: .whitespaces)
         guard !name.isEmpty else { return nil }
