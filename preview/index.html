@@ -1,0 +1,443 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Shinobi Pets Preview</title>
+<style>
+  :root {
+    --bg-a: #1d2440; --bg-b: #3b2a4f; --bg-c: #f08a4b;
+    --panel: rgba(22, 24, 34, 0.86); --panel-line: rgba(255, 255, 255, 0.12);
+    --text: #eef0f6; --muted: #a2a8bb; --accent: #f58426;
+    --win: #f6f4ef; --win-text: #2a2a33; --win-bar: #e4e1da;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; overflow: hidden; }
+  body {
+    font: 13px/1.4 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: var(--text);
+    background: radial-gradient(1200px 600px at 75% 110%, var(--bg-c) 0%, transparent 60%),
+                linear-gradient(160deg, var(--bg-a) 0%, var(--bg-b) 70%, #5a3550 100%);
+    user-select: none;
+  }
+  #menubar {
+    position: fixed; inset: 0 0 auto 0; height: 26px; display: flex; align-items: center;
+    gap: 18px; padding: 0 14px; background: rgba(20, 20, 28, 0.55);
+    backdrop-filter: blur(12px); font-weight: 500; z-index: 5;
+  }
+  #menubar .leaf { font-size: 15px; }
+  #menubar .right { margin-left: auto; color: var(--muted); }
+  .win {
+    position: absolute; background: var(--win); color: var(--win-text); border-radius: 10px;
+    box-shadow: 0 18px 50px rgba(0, 0, 0, 0.45); overflow: hidden; z-index: 2;
+  }
+  .win .bar {
+    height: 30px; background: var(--win-bar); display: flex; align-items: center;
+    gap: 7px; padding: 0 12px; cursor: grab; font-weight: 600; font-size: 12px;
+  }
+  .win .bar i { width: 12px; height: 12px; border-radius: 50%; display: inline-block; }
+  .win .bar span { margin-left: 8px; color: #5c5c66; }
+  .win .body { padding: 14px 16px; font-size: 12.5px; }
+  .win.term { background: #1c1c22; color: #9fe2a2; }
+  .win.term .bar { background: #2b2b33; }
+  .win.term .bar span { color: #b5b5c0; }
+  .win.term .body { font-family: ui-monospace, Menlo, monospace; font-size: 12px; white-space: pre; }
+  #dock {
+    position: fixed; left: 50%; transform: translateX(-50%); bottom: 6px; height: 64px;
+    padding: 8px 10px; display: flex; gap: 8px; border-radius: 18px; z-index: 3;
+    background: rgba(255, 255, 255, 0.16); border: 1px solid rgba(255, 255, 255, 0.22);
+    backdrop-filter: blur(16px);
+  }
+  #dock b { width: 48px; height: 48px; border-radius: 12px; display: grid; place-items: center;
+    font-size: 24px; box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.18); }
+  #pets { position: fixed; inset: 0; pointer-events: none; z-index: 10; image-rendering: pixelated; }
+  #panel {
+    position: fixed; top: 38px; left: 12px; width: 290px; max-height: calc(100% - 130px);
+    display: flex; flex-direction: column; background: var(--panel); border: 1px solid var(--panel-line);
+    border-radius: 14px; backdrop-filter: blur(14px); z-index: 20; overflow: hidden;
+  }
+  #panel header { padding: 12px 14px 8px; display: flex; align-items: center; gap: 8px; }
+  #panel header h1 { font-size: 14px; margin: 0; letter-spacing: 0.02em; }
+  #panel header button { margin-left: auto; }
+  #panel .tabs { display: flex; gap: 6px; padding: 0 14px 10px; }
+  #panel .row { display: flex; gap: 6px; padding: 0 14px 10px; flex-wrap: wrap; align-items: center; }
+  #panel .row label { color: var(--muted); }
+  button, select {
+    font: inherit; color: var(--text); background: rgba(255, 255, 255, 0.08);
+    border: 1px solid var(--panel-line); border-radius: 8px; padding: 4px 10px; cursor: pointer;
+  }
+  button:hover { background: rgba(255, 255, 255, 0.16); }
+  button.on { background: var(--accent); border-color: var(--accent); color: #1b1422; font-weight: 600; }
+  #roster { overflow-y: auto; padding: 0 8px 10px; }
+  .pick { display: flex; align-items: center; gap: 10px; padding: 5px 6px; border-radius: 8px; cursor: pointer; }
+  .pick:hover { background: rgba(255, 255, 255, 0.07); }
+  .pick canvas { width: 40px; height: 40px; flex: none; }
+  .pick .meta { flex: 1; min-width: 0; }
+  .pick .meta b { display: block; font-size: 12.5px; }
+  .pick .meta small { color: var(--muted); }
+  .pick input { accent-color: var(--accent); }
+  .tag { font-size: 10px; padding: 1px 6px; border-radius: 6px; background: rgba(255, 255, 255, 0.1);
+    color: var(--muted); margin-left: 4px; text-transform: uppercase; letter-spacing: 0.05em; }
+  #menu {
+    position: fixed; display: none; min-width: 210px; background: rgba(30, 31, 42, 0.96);
+    border: 1px solid var(--panel-line); border-radius: 10px; padding: 5px; z-index: 40;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+  }
+  #menu .title { padding: 6px 10px 4px; color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; }
+  #menu div.item { padding: 5px 10px; border-radius: 6px; cursor: pointer; }
+  #menu div.item:hover { background: var(--accent); color: #1b1422; }
+  #menu hr { border: 0; border-top: 1px solid var(--panel-line); margin: 4px 0; }
+  #gallery {
+    position: fixed; inset: 26px 0 0 0; overflow-y: auto; display: none; z-index: 15;
+    padding: 24px 24px 120px 320px; background: rgba(14, 15, 24, 0.82); backdrop-filter: blur(6px);
+  }
+  #gallery h2 { margin: 0 0 4px; font-size: 18px; }
+  #gallery p.lead { margin: 0 0 18px; color: var(--muted); }
+  .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
+  .card { background: var(--panel); border: 1px solid var(--panel-line); border-radius: 14px; padding: 14px; }
+  .card h3 { margin: 0; font-size: 14px; display: flex; align-items: center; gap: 6px; }
+  .card h3 .dot { width: 10px; height: 10px; border-radius: 50%; }
+  .card p { margin: 4px 0 10px; color: var(--muted); font-size: 12px; min-height: 2.8em; }
+  .card .stage { height: 200px; display: grid; place-items: end center; border-radius: 10px;
+    background: linear-gradient(#2a3150, #3a2c4c); overflow: hidden; }
+  .card .stage canvas { max-width: 100%; }
+  .card .anims { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 10px; }
+  .card .anims button { font-size: 11.5px; padding: 3px 8px; }
+  .card .anims button.jutsu { border-color: rgba(245, 132, 38, 0.6); }
+  #hint { position: fixed; right: 14px; top: 36px; color: var(--muted); font-size: 12px; z-index: 6;
+    background: rgba(20, 20, 28, 0.55); padding: 6px 10px; border-radius: 8px; }
+  @media (max-width: 720px) {
+    #panel { width: calc(100% - 24px); max-height: 45%; }
+    #gallery { padding: 50% 16px 120px; }
+    #hint, .win { display: none; }
+  }
+</style>
+</head>
+<body>
+<div id="menubar"><span class="leaf">🍃</span><b>Shinobi Pets</b><span>File</span><span>Jutsu</span><span>Window</span><span class="right" id="clock"></span></div>
+
+<div class="win term" id="w1" style="left: 46%; top: 22%; width: 400px;">
+  <div class="bar"><i style="background:#ff5f57"></i><i style="background:#febc2e"></i><i style="background:#28c840"></i><span>zsh — konoha</span></div>
+  <div class="body">$ ./summon --all
+  Naruto ......... ready
+  Sasuke ......... brooding
+  Shikamaru ...... "what a drag"
+$ _</div>
+</div>
+<div class="win" id="w2" style="left: 62%; top: 52%; width: 300px;">
+  <div class="bar"><i style="background:#ff5f57"></i><i style="background:#febc2e"></i><i style="background:#28c840"></i><span>Mission Notes</span></div>
+  <div class="body">Drag these windows around: pets walk on top of them and fall off the edges.<br><br>Click a pet for a jutsu, right-click for the full menu, drag to pick it up.</div>
+</div>
+
+<div id="dock"><b style="background:#f58426">🍥</b><b style="background:#2a3767">⚡</b><b style="background:#cf2f3a">🌸</b><b style="background:#5f7a42">♟️</b><b style="background:#7b4fa0">🌼</b><b style="background:#4f8a4a">🥔</b><b style="background:#1b1b24">🐦‍⬛</b><b style="background:#c23a32">🐸</b></div>
+
+<canvas id="pets"></canvas>
+
+<div id="panel">
+  <header><h1>🍃 Shinobi Pets</h1><button id="collapse" title="Collapse">–</button></header>
+  <div class="tabs"><button id="tabDesk" class="on">Desktop</button><button id="tabGallery">Gallery</button></div>
+  <div class="row">
+    <button id="all">Summon all</button><button id="none">Clear</button>
+    <label for="scale">Size</label>
+    <select id="scale"><option value="0.75">S</option><option value="1" selected>M</option><option value="1.5">L</option></select>
+  </div>
+  <div id="roster"></div>
+</div>
+
+<div id="gallery">
+  <h2>Character sheets</h2>
+  <p class="lead">Every animation exported for each ninja. Orange buttons are jutsu; the stage shows each animation on its real canvas, scaled to fit.</p>
+  <div class="cards" id="cards"></div>
+</div>
+
+<div id="menu"></div>
+<div id="hint">Click = jutsu · Right-click = menu · Drag = pick up</div>
+
+<script src="manifest.js"></script>
+<script>
+'use strict';
+const PETS = window.PETS || [];
+const FPS = 10, BASE = 192;
+const strips = {};
+function strip(id, anim) {
+  const k = id + '/' + anim;
+  if (!strips[k]) { const im = new Image(); im.src = `strips/${id}_${anim}.png`; strips[k] = im; }
+  return strips[k];
+}
+const byId = Object.fromEntries(PETS.map(p => [p.id, p]));
+const eraLabel = { classic: 'Part I', shippuden: 'Shippuden', sannin: 'Sannin', jonin: 'Jonin', akatsuki: 'Akatsuki' };
+const rand = (a, b) => a + Math.random() * (b - a);
+const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+
+// ------------------------------------------------------------ desktop world
+const cv = document.getElementById('pets'), ctx = cv.getContext('2d');
+let S = 1, W = 0, H = 0, dpr = 1;
+function resize() {
+  dpr = window.devicePixelRatio || 1;
+  W = innerWidth; H = innerHeight;
+  cv.width = W * dpr; cv.height = H * dpr; cv.style.width = W + 'px'; cv.style.height = H + 'px';
+}
+addEventListener('resize', resize); resize();
+
+function platforms() {
+  const list = [{ x0: 0, x1: W, y: H - 76, floor: true }];   // top of the dock strip
+  for (const w of document.querySelectorAll('.win')) {
+    if (getComputedStyle(w).display === 'none') continue;
+    const r = w.getBoundingClientRect();
+    list.push({ x0: r.left, x1: r.right, y: r.top, el: w });
+  }
+  return list;
+}
+
+const pets = [];
+class Pet {
+  constructor(meta, x) {
+    this.m = meta; this.x = x ?? rand(40, W - 140); this.y = rand(60, H * 0.4);
+    this.vy = 0; this.dir = Math.random() < 0.5 ? 1 : -1;
+    this.anim = 'walk'; this.frame = 0; this.left = 0; this.acc = 0;
+    this.walkFor = rand(2, 6); this.plat = null; this.drag = null;
+  }
+  get a() { return this.m.animations[this.anim]; }
+  get speed() { return (30 + this.m.speed * 80) * S; }
+  play(id) {
+    if (!this.m.animations[id]) return;
+    this.anim = id; this.frame = 0; this.acc = 0;
+    this.left = this.a.frames * this.a.loops;
+  }
+  walk() { this.anim = 'walk'; this.frame = 0; this.walkFor = rand(3, 8); if (Math.random() < 0.3) this.dir *= -1; }
+  choose() {
+    const ids = Object.keys(this.m.animations);
+    const jutsu = ids.filter(i => this.m.animations[i].kind === 'jutsu');
+    const idle = ids.filter(i => this.m.animations[i].kind === 'idle');
+    const r = Math.random();
+    if (r < 0.45 && jutsu.length) return pick(jutsu);
+    if (r < 0.62 && idle.length) return pick(idle);
+    if (r < 0.75) return 'sleep';
+    return 'front';
+  }
+  step(dt) {
+    const fw = BASE * S;
+    if (this.drag) {
+      this.acc += dt;
+      while (this.acc > 1 / FPS) { this.acc -= 1 / FPS; this.frame = (this.frame + 1) % this.a.frames; }
+      return;
+    }
+    // gravity + landing
+    if (!this.plat) {
+      const prevY = this.y;
+      this.vy = Math.min(this.vy + 1800 * dt, 1400);
+      this.y += this.vy * dt;
+      const cx = this.x + fw / 2;
+      for (const p of platforms()) {
+        if (cx >= p.x0 && cx <= p.x1 && prevY <= p.y + 1 && this.y >= p.y) {
+          this.y = p.y; this.vy = 0; this.plat = p; break;
+        }
+      }
+      if (this.y > H + 200) { this.y = -50; this.x = rand(40, W - 140); }   // auto-respawn
+    } else {
+      const fresh = platforms().find(p => p.el === this.plat.el && p.floor === this.plat.floor);
+      if (!fresh) { this.plat = null; } else {
+        this.plat = fresh; this.y = fresh.y;
+        const cx = this.x + fw / 2;
+        if (cx < fresh.x0 || cx > fresh.x1) this.plat = null;   // walked off the edge
+      }
+    }
+    // horizontal movement
+    const moving = this.anim === 'walk' || this.a.moving;
+    if (moving && this.plat) {
+      this.x += this.dir * this.speed * (this.a.moving ? 2.6 : 1) * dt;
+      if (this.x < 0) { this.x = 0; this.dir = 1; }
+      if (this.x > W - fw) { this.x = W - fw; this.dir = -1; }
+    }
+    // frames + scheduling
+    this.acc += dt;
+    while (this.acc > 1 / FPS) {
+      this.acc -= 1 / FPS;
+      this.frame = (this.frame + 1) % this.a.frames;
+      if (this.anim !== 'walk') { if (--this.left <= 0) this.walk(); }
+    }
+    if (this.anim === 'walk' && this.plat) {
+      this.walkFor -= dt;
+      if (this.walkFor <= 0) this.play(this.choose());
+    }
+  }
+  draw() {
+    const a = this.a, im = strip(this.m.id, this.anim);
+    if (!im.complete || !im.naturalWidth) return;
+    const fw = BASE * S, w = a.w * S, h = a.h * S;
+    ctx.save();
+    ctx.translate((this.x + fw / 2) * dpr, 0);
+    ctx.scale(this.dir < 0 ? -dpr : dpr, dpr);
+    ctx.drawImage(im, this.frame * a.w, 0, a.w, a.h, -fw / 2 - a.anchorX * S, this.y - h, w, h);
+    ctx.restore();
+    if (this === hover && !this.drag) {
+      ctx.save(); ctx.scale(dpr, dpr);
+      ctx.font = '600 11px -apple-system, sans-serif';
+      const t = this.m.name + (this.m.era === 'classic' ? ' (Part I)' : this.m.era === 'shippuden' ? ' (Shippuden)' : '');
+      const tw = ctx.measureText(t).width + 12, tx = this.x + fw / 2 - tw / 2, ty = this.y - fw + 2;
+      ctx.fillStyle = 'rgba(20,20,28,.85)'; ctx.beginPath(); ctx.roundRect(tx, ty - 16, tw, 18, 6); ctx.fill();
+      ctx.fillStyle = '#fff'; ctx.fillText(t, tx + 6, ty - 3); ctx.restore();
+    }
+  }
+  hit(px, py) {
+    const fw = BASE * S;
+    return px >= this.x + fw * 0.36 && px <= this.x + fw * 0.64 && py >= this.y - fw * 0.95 && py <= this.y;
+  }
+}
+
+function summon(id) { const m = byId[id]; if (m && !pets.some(p => p.m.id === id)) pets.push(new Pet(m)); syncRoster(); }
+function dismiss(id) { const i = pets.findIndex(p => p.m.id === id); if (i >= 0) pets.splice(i, 1); syncRoster(); }
+
+let last = performance.now();
+function tick(now) {
+  const dt = Math.min(0.05, (now - last) / 1000); last = now;
+  ctx.clearRect(0, 0, cv.width, cv.height);
+  ctx.imageSmoothingEnabled = false;
+  for (const p of pets) p.step(dt);
+  for (const p of pets) p.draw();
+  requestAnimationFrame(tick);
+}
+requestAnimationFrame(tick);
+
+// ------------------------------------------------------------ pointer input
+let hover = null, press = null;
+const menu = document.getElementById('menu');
+function petAt(x, y) { for (let i = pets.length - 1; i >= 0; i--) if (pets[i].hit(x, y)) return pets[i]; return null; }
+document.addEventListener('pointermove', e => {
+  if (press && press.pet) {
+    const p = press.pet, fw = BASE * S;
+    if (Math.hypot(e.clientX - press.x, e.clientY - press.y) > 4 && !p.drag) {
+      p.drag = true; p.anim = 'drag'; p.frame = 0; p.plat = null;
+    }
+    if (p.drag) { p.x = e.clientX - fw / 2; p.y = e.clientY + fw * 0.8; }
+    return;
+  }
+  if (press && press.win) {
+    press.win.style.left = (e.clientX - press.dx) + 'px';
+    press.win.style.top = Math.max(26, e.clientY - press.dy) + 'px';
+    return;
+  }
+  const h = petAt(e.clientX, e.clientY);
+  hover = h; document.body.style.cursor = h ? 'grab' : '';
+}, true);
+document.addEventListener('pointerdown', e => {
+  if (e.button !== 0) return;
+  if (!menu.contains(e.target)) menu.style.display = 'none';
+  if (e.target.closest('#panel, #gallery, #menu')) return;
+  const p = petAt(e.clientX, e.clientY);
+  if (p) { press = { pet: p, x: e.clientX, y: e.clientY }; e.preventDefault(); e.stopPropagation(); return; }
+  const bar = e.target.closest('.win .bar');
+  if (bar) {
+    const win = bar.parentElement, r = win.getBoundingClientRect();
+    press = { win, dx: e.clientX - r.left, dy: e.clientY - r.top };
+    win.parentElement.appendChild(win);
+  }
+}, true);
+document.addEventListener('pointerup', e => {
+  if (press && press.pet) {
+    const p = press.pet;
+    if (p.drag) { p.drag = false; p.vy = 0; p.walk(); }
+    else {
+      const jutsu = Object.keys(p.m.animations).filter(i => p.m.animations[i].kind === 'jutsu');
+      p.play(pick(jutsu));
+    }
+  }
+  press = null;
+}, true);
+document.addEventListener('contextmenu', e => {
+  const p = petAt(e.clientX, e.clientY);
+  if (!p) return;
+  e.preventDefault();
+  const anims = p.m.animations;
+  const ids = Object.keys(anims).filter(i => i !== 'walk' && i !== 'drag');
+  const item = (id) => `<div class="item" data-act="${id}">${anims[id].kind === 'jutsu' ? '🌀 ' : ''}${anims[id].label}</div>`;
+  menu.innerHTML = `<div class="title">${p.m.name} · ${eraLabel[p.m.era]}</div>` +
+    ids.filter(i => anims[i].kind === 'jutsu').map(item).join('') + '<hr>' +
+    ids.filter(i => anims[i].kind !== 'jutsu').map(item).join('') +
+    '<hr><div class="item" data-act="__walk">Walk</div><div class="item" data-act="__dismiss">Dismiss</div>';
+  menu.style.display = 'block';
+  menu.style.left = Math.min(e.clientX, W - 230) + 'px';
+  menu.style.top = Math.min(e.clientY, H - menu.offsetHeight - 10) + 'px';
+  menu.onclick = ev => {
+    const act = ev.target.closest('[data-act]')?.dataset.act;
+    if (!act) return;
+    if (act === '__dismiss') dismiss(p.m.id); else if (act === '__walk') p.walk(); else p.play(act);
+    menu.style.display = 'none';
+  };
+});
+
+// ------------------------------------------------------------ side panel
+const roster = document.getElementById('roster');
+function thumb(meta, size = 40) {
+  const c = document.createElement('canvas'); c.width = BASE; c.height = BASE;
+  const im = strip(meta.id, 'front');
+  const draw = () => { const g = c.getContext('2d'); g.clearRect(0, 0, BASE, BASE); g.drawImage(im, BASE * 0.3, 0, BASE * 0.4, BASE * 0.4, 0, 0, BASE, BASE); };
+  im.complete ? draw() : im.addEventListener('load', draw);
+  return c;
+}
+for (const m of PETS) {
+  const row = document.createElement('label'); row.className = 'pick';
+  const cb = document.createElement('input'); cb.type = 'checkbox'; cb.dataset.id = m.id;
+  cb.onchange = () => cb.checked ? summon(m.id) : dismiss(m.id);
+  const meta = document.createElement('div'); meta.className = 'meta';
+  meta.innerHTML = `<b>${m.name}<span class="tag">${eraLabel[m.era]}</span></b><small>${
+    Object.values(m.animations).filter(a => a.kind === 'jutsu').map(a => a.label).join(' · ')}</small>`;
+  row.append(thumb(m), meta, cb); roster.append(row);
+}
+function syncRoster() { for (const cb of roster.querySelectorAll('input')) cb.checked = pets.some(p => p.m.id === cb.dataset.id); }
+document.getElementById('all').onclick = () => PETS.forEach((m, i) => { if (!pets.some(p => p.m.id === m.id)) { pets.push(new Pet(m, 30 + (i / PETS.length) * (W - 160))); } syncRoster(); });
+document.getElementById('none').onclick = () => { pets.length = 0; syncRoster(); };
+document.getElementById('scale').onchange = e => { S = +e.target.value; };
+document.getElementById('collapse').onclick = e => {
+  const hidden = roster.style.display === 'none';
+  for (const el of document.querySelectorAll('#panel .tabs, #panel .row, #roster')) el.style.display = hidden ? '' : 'none';
+  e.target.textContent = hidden ? '–' : '+';
+};
+
+// ------------------------------------------------------------ gallery
+const gallery = document.getElementById('gallery'), cards = document.getElementById('cards');
+const galleryPlayers = [];
+for (const m of PETS) {
+  const card = document.createElement('div'); card.className = 'card';
+  card.innerHTML = `<h3><span class="dot" style="background:${m.color}"></span>${m.name}<span class="tag">${eraLabel[m.era]}</span></h3><p>${m.tagline}</p>`;
+  const stage = document.createElement('div'); stage.className = 'stage';
+  const c = document.createElement('canvas'); stage.append(c); card.append(stage);
+  const btns = document.createElement('div'); btns.className = 'anims'; card.append(btns);
+  const player = { m, c, anim: 'walk', frame: 0 };
+  for (const [id, a] of Object.entries(m.animations)) {
+    const b = document.createElement('button'); b.textContent = a.label;
+    if (a.kind === 'jutsu') b.className = 'jutsu';
+    b.onclick = () => { player.anim = id; player.frame = 0; btns.querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); };
+    if (id === 'walk') b.classList.add('on');
+    btns.append(b);
+  }
+  galleryPlayers.push(player); cards.append(card);
+}
+setInterval(() => {
+  if (gallery.style.display !== 'block') return;
+  for (const p of galleryPlayers) {
+    const a = p.m.animations[p.anim], im = strip(p.m.id, p.anim);
+    if (!im.complete) continue;
+    const k = Math.min(1, 190 / a.h, 270 / a.w);
+    if (p.c.width !== Math.round(a.w * k)) { p.c.width = Math.round(a.w * k); p.c.height = Math.round(a.h * k); }
+    const g = p.c.getContext('2d'); g.imageSmoothingEnabled = false; g.clearRect(0, 0, p.c.width, p.c.height);
+    g.drawImage(im, p.frame * a.w, 0, a.w, a.h, 0, 0, p.c.width, p.c.height);
+    p.frame = (p.frame + 1) % a.frames;
+  }
+}, 1000 / FPS);
+const tabs = { tabDesk: 'none', tabGallery: 'block' };
+for (const [id, disp] of Object.entries(tabs)) {
+  document.getElementById(id).onclick = () => {
+    gallery.style.display = disp;
+    for (const t of Object.keys(tabs)) document.getElementById(t).classList.toggle('on', t === id);
+  };
+}
+
+// clock + starting squad
+const clock = document.getElementById('clock');
+const tickClock = () => clock.textContent = new Date().toLocaleString([], { weekday: 'short', hour: '2-digit', minute: '2-digit' });
+tickClock(); setInterval(tickClock, 30000);
+if (/[?&]all\b/.test(location.search)) document.getElementById('all').click();
+else ['naruto', 'sasuke', 'sakura', 'kakashi'].forEach(summon);
+</script>
+</body>
+</html>
