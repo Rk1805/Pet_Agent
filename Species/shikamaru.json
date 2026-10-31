@@ -1,0 +1,76 @@
+{
+  "animations": [
+    {
+      "id": "front",
+      "position": "fromEntityBottomLeft",
+      "requiredLoops": 3
+    },
+    {
+      "id": "sleep",
+      "position": "fromEntityBottomLeft",
+      "requiredLoops": 12
+    },
+    {
+      "id": "shogi",
+      "position": "fromEntityBottomLeft",
+      "requiredLoops": 2
+    },
+    {
+      "id": "shadow_possession",
+      "position": "fromEntityBottomLeft",
+      "requiredLoops": 1,
+      "size": [
+        3.0,
+        1.0
+      ]
+    },
+    {
+      "id": "shadow_neck_bind",
+      "position": "fromEntityBottomLeft",
+      "requiredLoops": 1,
+      "size": [
+        3.0,
+        1.25
+      ]
+    },
+    {
+      "id": "cloud_watch",
+      "position": "fromEntityBottomLeft",
+      "requiredLoops": 2,
+      "size": [
+        1.5,
+        1.0
+      ]
+    }
+  ],
+  "capabilities": [
+    "AnimatedSprite",
+    "AnimationsProvider",
+    "AutoRespawn",
+    "BounceOnLateralCollisions",
+    "Draggable",
+    "FlipHorizontallyWhenGoingLeft",
+    "Gravity",
+    "LinearMovement",
+    "PetsSpritesProvider",
+    "AnimationsScheduler",
+    "Rotating",
+    "ShowsMenuOnRightClick",
+    "TrapEscaper",
+    "PlatformLooper",
+    "TeleportationPortal"
+  ],
+  "dragPath": "drag",
+  "fps": 10,
+  "zIndex": 0,
+  "scale": 1,
+  "tags": [
+    "naruto",
+    "classic"
+  ],
+  "id": "shikamaru",
+  "groupCategory": "shikamaru",
+  "colorHex": "6f8f5a",
+  "movementPath": "walk",
+  "speed": 0.35
+}

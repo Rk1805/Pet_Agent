@@ -1,0 +1,67 @@
+{
+  "animations": [
+    {
+      "id": "front",
+      "position": "fromEntityBottomLeft",
+      "requiredLoops": 3
+    },
+    {
+      "id": "sleep",
+      "position": "fromEntityBottomLeft",
+      "requiredLoops": 12
+    },
+    {
+      "id": "dango",
+      "position": "fromEntityBottomLeft",
+      "requiredLoops": 2
+    },
+    {
+      "id": "cherry_blossom_impact",
+      "position": "fromEntityBottomLeft",
+      "requiredLoops": 1,
+      "size": [
+        2.0,
+        1.25
+      ]
+    },
+    {
+      "id": "healing",
+      "position": "fromEntityBottomLeft",
+      "requiredLoops": 2,
+      "size": [
+        1.5,
+        1.0
+      ]
+    }
+  ],
+  "capabilities": [
+    "AnimatedSprite",
+    "AnimationsProvider",
+    "AutoRespawn",
+    "BounceOnLateralCollisions",
+    "Draggable",
+    "FlipHorizontallyWhenGoingLeft",
+    "Gravity",
+    "LinearMovement",
+    "PetsSpritesProvider",
+    "AnimationsScheduler",
+    "Rotating",
+    "ShowsMenuOnRightClick",
+    "TrapEscaper",
+    "PlatformLooper",
+    "TeleportationPortal"
+  ],
+  "dragPath": "drag",
+  "fps": 10,
+  "zIndex": 0,
+  "scale": 1,
+  "tags": [
+    "naruto",
+    "shippuden"
+  ],
+  "id": "sakura_shippuden",
+  "groupCategory": "sakura",
+  "colorHex": "7d2d3b",
+  "movementPath": "walk",
+  "speed": 0.6
+}

@@ -1,0 +1,67 @@
+{
+  "animations": [
+    {
+      "id": "front",
+      "position": "fromEntityBottomLeft",
+      "requiredLoops": 3
+    },
+    {
+      "id": "sleep",
+      "position": "fromEntityBottomLeft",
+      "requiredLoops": 12
+    },
+    {
+      "id": "shogi",
+      "position": "fromEntityBottomLeft",
+      "requiredLoops": 2
+    },
+    {
+      "id": "shadow_possession",
+      "position": "fromEntityBottomLeft",
+      "requiredLoops": 1,
+      "size": [
+        3.0,
+        1.0
+      ]
+    },
+    {
+      "id": "shadow_stitching",
+      "position": "fromEntityBottomLeft",
+      "requiredLoops": 1,
+      "size": [
+        3.0,
+        1.5
+      ]
+    }
+  ],
+  "capabilities": [
+    "AnimatedSprite",
+    "AnimationsProvider",
+    "AutoRespawn",
+    "BounceOnLateralCollisions",
+    "Draggable",
+    "FlipHorizontallyWhenGoingLeft",
+    "Gravity",
+    "LinearMovement",
+    "PetsSpritesProvider",
+    "AnimationsScheduler",
+    "Rotating",
+    "ShowsMenuOnRightClick",
+    "TrapEscaper",
+    "PlatformLooper",
+    "TeleportationPortal"
+  ],
+  "dragPath": "drag",
+  "fps": 10,
+  "zIndex": 0,
+  "scale": 1,
+  "tags": [
+    "naruto",
+    "shippuden"
+  ],
+  "id": "shikamaru_shippuden",
+  "groupCategory": "shikamaru",
+  "colorHex": "666c5c",
+  "movementPath": "walk",
+  "speed": 0.4
+}

@@ -1,0 +1,67 @@
+{
+  "animations": [
+    {
+      "id": "front",
+      "position": "fromEntityBottomLeft",
+      "requiredLoops": 3
+    },
+    {
+      "id": "sleep",
+      "position": "fromEntityBottomLeft",
+      "requiredLoops": 12
+    },
+    {
+      "id": "flower",
+      "position": "fromEntityBottomLeft",
+      "requiredLoops": 2
+    },
+    {
+      "id": "mind_transfer",
+      "position": "fromEntityBottomLeft",
+      "requiredLoops": 1,
+      "size": [
+        3.0,
+        1.0
+      ]
+    },
+    {
+      "id": "healing",
+      "position": "fromEntityBottomLeft",
+      "requiredLoops": 2,
+      "size": [
+        1.5,
+        1.0
+      ]
+    }
+  ],
+  "capabilities": [
+    "AnimatedSprite",
+    "AnimationsProvider",
+    "AutoRespawn",
+    "BounceOnLateralCollisions",
+    "Draggable",
+    "FlipHorizontallyWhenGoingLeft",
+    "Gravity",
+    "LinearMovement",
+    "PetsSpritesProvider",
+    "AnimationsScheduler",
+    "Rotating",
+    "ShowsMenuOnRightClick",
+    "TrapEscaper",
+    "PlatformLooper",
+    "TeleportationPortal"
+  ],
+  "dragPath": "drag",
+  "fps": 10,
+  "zIndex": 0,
+  "scale": 1,
+  "tags": [
+    "naruto",
+    "shippuden"
+  ],
+  "id": "ino_shippuden",
+  "groupCategory": "ino",
+  "colorHex": "523559",
+  "movementPath": "walk",
+  "speed": 0.55
+}
