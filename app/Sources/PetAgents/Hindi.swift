@@ -76,6 +76,45 @@ enum Hindi {
             let label = strip(t, [NSRegularExpression.escapedPattern(for: g[0]), remind, word(#"mujhe|muje|ki|ke\s*liye|ka|timer|laga\s*(?:o|do)|मुझे|कि|के\s*लिए"#)])
             return label.isEmpty ? "timer for \(amount)" : "remind me in \(amount) to \(label)"
         }
+        // "bhej do" / "send kar do" on its own: send the message typed earlier
+        if m(t, #"^(?:ab\s+|haan\s+)?(?:bhej\s*do|bhejo|send\s*kar\s*do|send\s*karo|भेज\s*दो|भेजो)$"#) != nil { return "send it" }
+        // WhatsApp: "whatsapp pe mom ko hi likho", "rahul ko whatsapp pe kal milte hain bhejo", "mom ki whatsapp chat kholo"
+        let wa = #"(?:whatsapp|whats\s*app|व्हाट्सएप|व्हाट्सऐप)"#
+        let on = #"\s*(?:pe|par|pr|mein|me|पर|पे|में)\s*"#
+        let writeOrSend = #"(likho|likh\s*do|type\s*kar\s*do|bhejo|bhej\s*do|send\s*kar\s*do|लिखो|लिख\s*दो|भेजो|भेज\s*दो)"#
+        if let g = m(t, "^" + wa + on + #"(.+?)\s+(?:ko|को)\s+(.+?)\s+"# + writeOrSend + "$")
+            ?? m(t, #"^(.+?)\s+(?:ko|को)\s+"# + wa + on + #"(.+?)\s+"# + writeOrSend + "$") {
+            let sending = m(g[3], #"bhej|send|भेज"#) != nil
+            return sending ? "send \(g[2]) to \(g[1]) on whatsapp" : "write \(g[2]) to \(g[1]) on whatsapp"
+        }
+        if let g = m(t, "^" + wa + on + #"(.+?)\s+(?:ki|का|की)\s+(?:chat\s+)?(?:kholo|khol\s*do|खोलो)$"#)
+            ?? m(t, #"^(.+?)\s+(?:ki|की)\s+"# + wa + #"\s+(?:chat\s+)?(?:kholo|khol\s*do|खोलो)$"#) {
+            return "open chat with \(g[1]) on whatsapp"
+        }
+        // Calendar: "kal 3 baje meeting calendar mein daalo", "kal ka schedule kya hai"
+        if m(t, #"calendar|कैलेंडर|schedule|meetings?|मीटिंग"#) != nil,
+           m(t, #"kya\s+hai|kya\s+hain|dikhao|batao|क्या\s+है|दिखाओ|बताओ"#) != nil {
+            let day = m(t, #"\bkal\b|कल"#) != nil ? "tomorrow" : m(t, #"parso|परसों"#) != nil ? "day after tomorrow" : "today"
+            return "what's on my calendar \(day)"
+        }
+        if m(t, #"calendar|कैलेंडर"#) != nil, m(t, #"daalo|dalo|daal\s*do|add\s*kar(?:o|\s*do)?|jodo|lagao|डालो|जोड़ो"#) != nil {
+            let what = strip(englishDates(t), [#"(?:calendar|कैलेंडर)\s*(?:mein|me|में|par|pe|पर)?"#,
+                                               #"daalo|dalo|daal\s*do|add\s*kar(?:o|\s*do)?|jodo|lagao|डालो|जोड़ो"#])
+            return what.isEmpty ? nil : "add \(what) to calendar"
+        }
+        // Apple Reminders: "kal 5 baje yaad dilana ki dawai leni hai", "doodh lana reminders mein daalo"
+        if m(t, remind) != nil {
+            let what = strip(englishDates(t), [remind, word(#"mujhe|muje|ki|ke\s*liye|मुझे|कि|के\s*लिए"#)])
+            if !what.isEmpty { return "remind me to \(what)" }
+        }
+        if m(t, #"reminders?|रिमाइंडर"#) != nil {
+            if m(t, #"dikhao|batao|kya\s+hai|kya\s+hain|दिखाओ|बताओ"#) != nil { return "show my reminders" }
+            let addVerb = #"daalo|dalo|daal\s*do|add\s*kar(?:o|\s*do)?|jodo|lagao|डालो|जोड़ो|bana\s*do|banao"#
+            if m(t, addVerb) != nil {           // only Hindi phrasings; English goes to the English rules
+                let what = strip(englishDates(t), [#"(?:reminders?|रिमाइंडर)\s*(?:mein|me|में)?"#, addVerb])
+                if !what.isEmpty { return "add \(what) to my reminders" }
+            }
+        }
         // Sending to AI apps: "claude ko bhejo hello", "hello claude ko bhej do", "claude mein hello bhejo"
         let aiApp = #"(claude|chatgpt|perplexity|gemini|क्लॉड)"#
         let send = #"(?:bhejo|bhej\s*do|send\s*kar\s*(?:o|do)?|भेजो|भेज\s*दो)"#
@@ -147,6 +186,24 @@ enum Hindi {
         if m(t, #"light\s*mode|लाइट\s*मोड"#) != nil { return "light mode" }
         if m(t, #"jutsu|जुत्सु"#) != nil { return "jutsu" }
         return nil
+    }
+
+    /// "kal shaam 7 baje" → "tomorrow at 7 pm", "parso subah 9 baje" → "day after tomorrow at 9 am".
+    static func englishDates(_ text: String) -> String {
+        var t = text
+        let swaps: [(String, String)] = [
+            (#"(?<![\p{L}\p{M}])(?:parso|parson|परसों)(?![\p{L}\p{M}])"#, "day after tomorrow"),
+            (#"(?<![\p{L}\p{M}])(?:kal|कल)(?![\p{L}\p{M}])"#, "tomorrow"),
+            (#"(?<![\p{L}\p{M}])(?:aaj|आज)(?![\p{L}\p{M}])"#, "today"),
+        ]
+        for (p, r) in swaps { t = t.replacingOccurrences(of: p, with: r, options: [.regularExpression, .caseInsensitive]) }
+        // "<part of day> N(:MM) baje" → "at N(:MM) am/pm"
+        let parts: [(String, String)] = [(#"subah|सुबह"#, " am"), (#"dopahar|dopehar|दोपहर|shaam|sham|शाम|raat|रात"#, " pm"), ("", "")]
+        for (part, suffix) in parts {
+            let p = (part.isEmpty ? "" : "(?:" + part + #")\s*"#) + #"(\d{1,2}(?::\d{2})?)\s*(?:baje|बजे)"#
+            t = t.replacingOccurrences(of: p, with: "at $1" + suffix, options: [.regularExpression, .caseInsensitive])
+        }
+        return t.replacingOccurrences(of: #"\s+"#, with: " ", options: .regularExpression)
     }
 
     // MARK: on-device translation (macOS 26+, Hindi pack from System Settings or the Home window)

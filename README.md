@@ -92,7 +92,9 @@ already in the repo.
    | For | Where |
    | --- | --- |
    | Understanding free-form requests | System Settings → **Apple Intelligence & Siri** → on (it downloads its model once) |
-   | Typing into apps (Claude, Notes…) and shortcuts | System Settings → Privacy & Security → **Accessibility** → Pet Agents on |
+   | Typing into apps (Claude, Notes…), shortcuts, sending on WhatsApp | System Settings → Privacy & Security → **Accessibility** → Pet Agents on |
+   | Reminders / Calendar | Click **Allow** when asked (Privacy & Security → **Reminders** / **Calendars**) |
+   | Opening the right WhatsApp chat by name | Click **Allow** for Contacts (Privacy & Security → **Contacts**) |
    | Controlling Spotify, dark mode | Click **OK** on the "Pet Agents wants to control…" prompts (Privacy & Security → **Automation**) |
    | Full Hindi (beyond the built-in Hinglish commands) | Home → Settings → **Download Hindi** |
    | Playing the exact song on Spotify | Free app at developer.spotify.com/dashboard → paste Client ID + Secret in Home → Settings |
@@ -164,6 +166,9 @@ A Pets Therapy–style window with a tab bar:
 | Apps | "open Notes", "launch VS Code", "quit Safari", "open github.com in Safari" |
 | Send to AI apps | "type hello in claude", "send what is 2+2 to claude", "tell claude …", "ask chatgpt for a joke", "open a new chat in claude and ask it …". In Claude, ChatGPT, Perplexity, Gemini and Copilot the message is **sent** (Return pressed); add "but don't send" (Hindi: "bina bheje") to only type it |
 | Type for you | "type buy milk in notes" (other apps only type; add "and send" to press Return), "write a haiku about rain in notes" (the pet writes it first), "close this tab in safari" |
+| Reminders | "remind me to call mom tomorrow at 5pm", "add buy milk to my reminders", "what are my reminders today" (Apple Reminders, synced to your iPhone via iCloud) |
+| Calendar | "schedule dentist next friday at 3pm", "add standup tomorrow at 9 to my calendar", "meeting with sam on monday at 10:30am for 30 minutes", "what's on my calendar tomorrow" |
+| WhatsApp | "open chat with mom on whatsapp", "message mom on whatsapp saying I'll be late" (writes it, **doesn't send**), "send I'll be late to mom on whatsapp" (sends), then "send it" to send a message written earlier |
 | Games | "play batman", "launch cs2 on steam": finds installed Steam games (every library) and starts them; not installed opens the Steam store |
 | Timers / reminders | "remind me in 25 minutes to take a break", "timer for 10 min" |
 | Web | "open github.com", "search best ramen in Tokyo", "youtube lofi beats" |
@@ -171,7 +176,7 @@ A Pets Therapy–style window with a tab bar:
 | Mac | "volume 30", "mute", "dark mode", "battery?" |
 | Apple Shortcuts | "run my Morning shortcut" (anything you have built in Shortcuts) |
 | The pets | "do a rasengan", "summon Itachi", "dismiss Sakura" |
-| Hindi / Hinglish | "hello kaise ho claude ko bhej do", "claude mein hello likho", "claude se pucho chawal kaise banaye", "steam pe batman khelo", "venom ko bulao", "arijit singh ka gaana chalao", "notes kholo", "10 minute baad yaad dilana paani peena", "awaaz kam karo", "केसरिया बजाओ" |
+| Hindi / Hinglish | "whatsapp pe mom ko hi likho" (writes), "rahul ko whatsapp pe kal milte hain bhej do" (sends), "bhej do", "kal 5 baje yaad dilana ki dawai leni hai", "kal shaam 7 baje dinner calendar mein daalo", "kal ka schedule kya hai", "hello kaise ho claude ko bhej do", "claude mein hello likho", "claude se pucho chawal kaise banaye", "steam pe batman khelo", "venom ko bulao", "arijit singh ka gaana chalao", "notes kholo", "10 minute baad yaad dilana paani peena", "awaaz kam karo", "केसरिया बजाओ" |
 
 **How it understands you** (everything stays on your Mac, no API keys, no downloads):
 
@@ -192,6 +197,18 @@ Other Devanagari text is translated to English on-device with Apple's Translatio
 the reply is translated back to Hindi. That needs the Hindi language pack: **Home → Settings →
 Download Hindi**. Check how a phrase is understood with
 `PetAgents.app/Contents/MacOS/PetAgents --hindi "gaana chalao"`.
+
+**WhatsApp:** the pet only presses send when you say "send" / "bhejo". For a saved contact it looks up
+their number in Contacts and opens that exact chat through WhatsApp's own `whatsapp://send` link with
+your message filled in. For groups and names that aren't in Contacts it uses WhatsApp's search (⌘F)
+and opens the top result; because search could pick the wrong chat, it never sends in that case: it
+writes the message and asks you to check, then "send it". Numbers saved without a country code get
+your Mac's region code (+91 in India).
+
+**Dates** ("tomorrow at 5pm", "next friday 3pm", "in 2 hours", "at 6", "for 30 minutes", Hindi "kal
+shaam 7 baje", "parso subah 9 baje") are understood on-device. A bare "at 6" means the next 6 PM, and
+a time that has already passed today moves to tomorrow. Check a phrase with
+`PetAgents.app/Contents/MacOS/PetAgents --when "call mom tomorrow at 5"`.
 
 **Playing a specific song:** without setup, the pet opens Spotify's search for the song. To
 have it press play on the exact track, create a free app at developer.spotify.com/dashboard
@@ -218,7 +235,9 @@ at launch and prints the result (add `PETAGENTS_DRYRUN=1` to log the actions ins
 | `Agent.swift` | Mission flow and the offline command parser |
 | `OnDeviceAI.swift` | Apple's on-device model (FoundationModels) with the pet's tools |
 | `Tools.swift` | The tool definitions the agent can call, plus timers |
-| `MacActions.swift` | Apps, Spotify (AppleScript + Web API), volume, Shortcuts, etc. |
+| `MacActions.swift` | Apps, Spotify (AppleScript + Web API), volume, Shortcuts, typing, Steam, etc. |
+| `Organizer.swift` | Apple Reminders and Calendar (EventKit) and the natural-date parser |
+| `WhatsApp.swift` | WhatsApp chats: contact lookup, click-to-chat links, search, "send it" |
 | `Hindi.swift` | Hindi / Hinglish command rules and on-device translation |
 | `Home.swift` | The Home window (SwiftUI): Pets, Missions, Settings, About |
 | `AppIcon.swift` | Draws the app icon from the sprites (used by `build.sh`) |

@@ -387,9 +387,13 @@ private struct MissionsTab: View {
         ("🗂 Apps & web", ["open Notes", "quit Safari", "open youtube", "search best ramen in Tokyo"]),
         ("⌨️ Type for me", ["ask claude for a quick pasta recipe", "write a haiku about rain in notes", "type hello in claude"]),
         ("🎮 Games", ["play batman", "launch cs2 on steam"]),
-        ("⏰ Reminders", ["remind me in 20 minutes to stretch", "timer for 5 min"]),
+        ("⏰ Timers", ["remind me in 20 minutes to stretch", "timer for 5 min"]),
+        ("📅 Reminders & Calendar", ["remind me to call mom tomorrow at 5pm", "what are my reminders today",
+                                    "schedule dentist next friday at 3pm", "what's on my calendar tomorrow"]),
+        ("💬 WhatsApp", ["open chat with mom on whatsapp", "message mom on whatsapp saying I'll be late", "send it"]),
         ("🖥 Mac", ["volume 30", "turn it down a bit", "dark mode", "battery?"]),
-        ("🇮🇳 Hindi", ["arijit singh ka gaana chalao", "notes kholo", "claude se pucho chawal kaise banaye", "steam pe batman khelo"]),
+        ("🇮🇳 Hindi", ["arijit singh ka gaana chalao", "whatsapp pe mom ko hi likho", "kal 5 baje yaad dilana ki dawai leni hai",
+                      "kal ka schedule kya hai"]),
         ("🕷 Pets", ["summon venom", "do a web swing", "dismiss doc ock"]),
     ]
 
@@ -427,7 +431,7 @@ private struct MissionsTab: View {
                         ScrollView(.horizontal, showsIndicators: false) {
                             HStack(spacing: 8) {
                                 ForEach(group.1, id: \.self) { ex in
-                                    Button { send(ex) } label: {
+                                    Button { text = ex } label: {      // fill the box; you press Send
                                         Text(ex).font(.system(size: 13, weight: .medium))
                                             .padding(.horizontal, 12).padding(.vertical, 7)
                                             .background(Color(hex: 0x1a2550, alpha: 0.7), in: Capsule())

@@ -41,6 +41,19 @@ enum Tools {
             tool("press_keys", "Press keyboard shortcuts in an app, e.g. cmd+n for a new chat/window, cmd+t new tab, cmd+w close tab.",
                  ["app": str("App to press them in. Empty = the app in front"),
                   "keys": str("Comma-separated combos, e.g. 'cmd+n' or 'cmd+l, return'")], required: ["keys"]),
+            tool("add_reminder", "Add a reminder to Apple Reminders (optionally with a due date/time).",
+                 ["title": str("What to remember, e.g. 'call mom'"), "when": str("When it's due, e.g. 'tomorrow at 5pm'"),
+                  "list": str("Optional Reminders list name")], required: ["title"]),
+            tool("list_reminders", "Read the user's open reminders.", ["scope": oneOf(["today", "all"], "Default today")]),
+            tool("add_calendar_event", "Add an event to the user's calendar.",
+                 ["title": str("Event name"), "when": str("Start, e.g. 'friday at 3pm'"),
+                  "duration_minutes": ["type": "integer", "description": "Default 60"], "location": str("Optional")],
+                 required: ["title", "when"]),
+            tool("list_calendar_events", "Read the user's calendar for a day.", ["day": str("e.g. today, tomorrow, friday")]),
+            tool("whatsapp_message", "Open a WhatsApp chat (contact, group or phone number) and optionally write a message in it. " +
+                 "Only set send to true if the user explicitly said to send it.",
+                 ["chat": str("Contact or group name, or phone number"), "text": str("Message to write (optional)"),
+                  "send": ["type": "boolean", "description": "true only when the user asked to send"]], required: ["chat"]),
             tool("launch_game", "Launch an installed game (Steam library or Applications).", ["name": str("Game name")],
                  required: ["name"]),
             tool("search_in_browser", "Open a Google or YouTube search results page in the browser for the user to look at.",
@@ -73,6 +86,10 @@ enum Tools {
         case "spotify_play": return "🎵 Finding \(s("query").isEmpty ? "that" : s("query"))…"
         case "type_text": return "⌨️ Typing in \(s("app").isEmpty ? "the app" : s("app"))…"
         case "launch_game": return "🎮 Starting \(s("name"))…"
+        case "add_reminder": return "📝 Adding a reminder…"
+        case "add_calendar_event": return "📅 Adding it to your calendar…"
+        case "list_calendar_events", "list_reminders": return "📅 Checking…"
+        case "whatsapp_message": return "💬 Opening WhatsApp…"
         case "web_search": return "🔎 Looking it up…"
         case "open_url", "search_in_browser": return "Opening the browser…"
         case "set_timer": return "⏰ Setting a timer…"
@@ -89,6 +106,10 @@ enum Tools {
         if ProcessInfo.processInfo.environment["PETAGENTS_DRYRUN"] == "1" {
             var extra = ""
             if name == "launch_game" { extra = " → \(Steam.find(s("name"))?.name ?? "not installed")" }
+            if name == "add_reminder" || name == "add_calendar_event" {
+                let w = When.parse(s("when").isEmpty ? s("title") : s("when"))
+                extra = " → " + (w.map { "\"\(s("when").isEmpty ? $0.rest : s("title"))\" \($0.spoken)" + ($0.duration.map { " for \(Int($0 / 60)) min" } ?? "") } ?? "no date")
+            }
             print("[dry-run] \(name) \(input)\(extra)")
             return .ok("Done (dry run).")
         }
@@ -125,6 +146,21 @@ enum Tools {
             return await typeText(app: s("app"), text: text, submit: input["submit"] as? Bool ?? isAssistant)
         case "press_keys":
             return await pressKeys(app: s("app"), keys: s("keys"))
+        case "add_reminder":
+            return await Organizer.addReminder(s("title"), when: s("when"), list: s("list"))
+        case "list_reminders":
+            return await Organizer.listReminders(today: s("scope") != "all")
+        case "add_calendar_event":
+            return await Organizer.addEvent(s("title"), when: s("when"), minutes: i("duration_minutes"), location: s("location"))
+        case "list_calendar_events":
+            return await Organizer.listEvents(day: s("day"))
+        case "whatsapp_message":
+            return await WhatsApp.message(chat: s("chat"), text: input["text"] as? String ?? "", send: input["send"] as? Bool ?? false)
+        case "send_pending":
+            if let r = await WhatsApp.sendPending() { return r }
+            guard let app = pendingApp else { return .fail("There's nothing waiting to be sent.") }
+            pendingApp = nil
+            return await pressKeys(app: app, keys: "return")
         case "launch_game":
             if let app = Mac.findApp(s("name")), !s("name").isEmpty, Steam.find(s("name")) == nil {
                 return await Mac.openApp(app.deletingPathExtension().lastPathComponent)
@@ -177,6 +213,10 @@ enum Tools {
         "perplexity": "https://www.perplexity.ai/search?q=",
     ]
 
+    /// App we typed into without sending, so "send it" can press Return there later.
+    @MainActor static var pendingApp: String?
+
+    @MainActor
     static func typeText(app: String, text: String, submit: Bool) async -> ActionResult {
         guard !text.isEmpty else { return .fail("Nothing to type.") }
         let key = app.lowercased().replacingOccurrences(of: " ", with: "")
@@ -188,7 +228,7 @@ enum Tools {
         if app.isEmpty { await Mac.sleep(0.5) }          // let focus go back to the app you were using
         else if let err = await Keyboard.focus(app: app) { return err }
         await Keyboard.paste(text)
-        if submit { await Mac.sleep(0.25); _ = Keyboard.press("return") }
+        if submit { await Mac.sleep(0.25); _ = Keyboard.press("return") } else if !app.isEmpty { pendingApp = app }
         let target = app.isEmpty ? (NSWorkspace.shared.frontmostApplication?.localizedName ?? "the front app") : app
         return .ok(submit ? "Sent it in \(target)." : "Typed it into \(target).")
     }

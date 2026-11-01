@@ -108,7 +108,28 @@ enum LocalCommands {
         if match(lower, #"^(next|skip)( this)?( song| track)?$"#) != nil { return await call("spotify_control", ["action": "next"]) }
         if match(lower, #"^(previous|go back|last)( song| track)?$"#) != nil { return await call("spotify_control", ["action": "previous"]) }
         if match(lower, #"(what'?s|what is) (playing|this song)|now playing"#) != nil { return await call("spotify_control", ["action": "now_playing"]) }
-        // "send hello to claude", "tell chatgpt I'm back", "send this to claude: …"
+        // "send it" / "send": the message typed earlier (WhatsApp or another app) goes out now.
+        if match(lower, #"^(?:ok(?:ay)?\s+)?(?:now\s+)?(?:send|send it|send that|send the message|send message|go ahead and send(?: it)?|yes send(?: it)?)(?:\s+now)?$"#) != nil {
+            return await call("send_pending", [:])
+        }
+        // WhatsApp: open a chat, write in it, send only when told to.
+        if lower.contains("whatsapp") {
+            let wa = #"\s+(?:on|in|via|over|using)\s+whatsapp"#
+            if let g = match(t, #"^send\s+["“']?(.+?)["”']?\s+to\s+(.+?)"# + wa + "$") {
+                return await call("whatsapp_message", ["chat": g[1], "text": g[0], "send": true])
+            }
+            if let g = match(t, #"^(?:type|write|draft|put)\s+["“']?(.+?)["”']?\s+(?:to|for|in)\s+(.+?)(?:'s\s+chat|\s+chat)?"# + wa + #"(\s+and\s+send(?:\s+it)?)?$"#) {
+                return await call("whatsapp_message", ["chat": g[1], "text": g[0], "send": !g[2].isEmpty])
+            }
+            if let g = match(t, #"^(?:message|msg|text|whatsapp)\s+(.+?)(?:"# + wa + #")?\s*(?:saying|that|:|,)\s*["“']?(.+?)["”']?(\s+and\s+send(?:\s+it)?)?$"#) {
+                return await call("whatsapp_message", ["chat": g[0], "text": g[1], "send": !g[2].isEmpty])
+            }
+            if let g = match(t, #"^(?:open|search|search for|find|go to|show)\s+(?:my\s+)?(?:whatsapp\s+)?chat\s+(?:with|of|for)\s+(.+?)(?:"# + wa + ")?$")
+                ?? match(t, #"^(?:open|search|search for|find)\s+(.+?)"# + wa + "$") {
+                return await call("whatsapp_message", ["chat": g[0]])
+            }
+        }
+        // "send hello to claude", "tell chatgpt I'm back", "send this to claude: …\"
         let ai = #"(claude|chatgpt|chat gpt|perplexity|gemini|copilot)"#
         if let g = match(t, #"^(?:send|message)\s+["“']?(.+?)["”']?\s+to\s+"# + ai + #"$"#)
             ?? match(t, #"^(?:send|tell|message)\s+"# + ai + #"[:,]?\s+(?:that\s+)?(.+)$"#).map({ [$0[1], $0[0]] }) {
@@ -160,6 +181,28 @@ enum LocalCommands {
         if let g = match(t, #"^(?:set\s+)?(?:a\s+)?timer\s+(?:for\s+)?(\d+)\s*\#(unit)(?:\s+(?:for|to)\s+(.+))?$"#)
             ?? match(t, #"^(\d+)\s*\#(unit)\s+timer(?:\s+(?:for|to)\s+(.+))?$"#) {
             return await call("set_timer", ["seconds": seconds(g[0], g[1]), "label": g[2].isEmpty ? "Time's up!" : g[2]])
+        }
+        // Apple Reminders: "remind me to call mom tomorrow at 5", "add buy milk to my reminders"
+        if let g = match(t, #"^(?:add|create|make|set)\s+(?:a\s+)?reminder\s+(?:to\s+|for\s+|that\s+|about\s+)?(.+)$"#)
+            ?? match(t, #"^add\s+(.+?)\s+to\s+(?:my\s+)?(?:reminders|to-?do(?: list)?|todos)$"#)
+            ?? match(t, #"^remind me (?:to|about|of)\s+(.+)$"#) {
+            return await call("add_reminder", ["title": g[0]])
+        }
+        if let g = match(lower, #"^(?:what are|show|show me|list|read|check)\s+(?:my\s+)?(?:reminders|to-?dos?|to-?do list)(\s+(?:for\s+)?today)?$"#)
+            ?? match(lower, #"^(?:my\s+)?reminders(\s+today)?$"#) {
+            return await call("list_reminders", ["scope": g[0].isEmpty ? "all" : "today"])
+        }
+        // Calendar: "schedule dentist friday at 3pm", "add standup tomorrow at 9 to my calendar"
+        if let g = match(t, #"^(?:add|put|create)\s+(?:an?\s+)?(.+?)\s+(?:to|in|on)\s+(?:my\s+)?calendar$"#)
+            ?? match(t, #"^(?:schedule|book|set up|plan)\s+(?:an?\s+)?(.+)$"#)
+            ?? match(t, #"^(?:add|create)\s+(?:an?\s+)?((?:event|meeting|appointment|call)\s+.+)$"#),
+           When.parse(g[0]) != nil {
+            return await call("add_calendar_event", ["title": g[0], "when": ""])
+        }
+        if let g = match(lower, #"^(?:what'?s|what is|show|show me|check|read)\s+(?:on\s+)?(?:my\s+)?(?:calendar|schedule|agenda|events|meetings)(?:\s+(?:for\s+|on\s+)?(.+))?$"#)
+            ?? match(lower, #"^(?:what|which|any)\s+(?:meetings|events)\s+(?:do i have\s+)?(.+)?$"#)
+            ?? match(lower, #"^do i have (?:any\s+)?(?:meetings|events)(?:\s+(.+))?$"#) {
+            return await call("list_calendar_events", ["day": g[0].isEmpty ? "today" : g[0]])
         }
         if let g = match(lower, #"^(?:set\s+)?(?:the\s+)?volume\s+(?:to\s+)?(\d+)%?$"#) { return await call("set_volume", ["level": Int(g[0]) ?? 50]) }
         if lower == "mute" { return await call("set_volume", ["muted": true]) }
