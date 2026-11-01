@@ -24,11 +24,24 @@ done
 iconutil -c icns "$ICONSET" -o "$APP/Contents/Resources/AppIcon.icns"
 rm -rf "$ICONSET" build/icon_1024.png
 
-# Sign with the stable local certificate when it exists (see make-signing-cert.sh), so macOS keeps
-# Accessibility / Automation permissions across rebuilds. Otherwise fall back to an ad-hoc signature,
-# which macOS treats as a brand-new app after every build.
+# Sign with the stable local certificate (see make-signing-cert.sh), so macOS keeps Accessibility /
+# Automation permissions across rebuilds. Without it, fall back to an ad-hoc signature, which macOS
+# treats as a brand-new app after every build.
 IDENTITY="Pet Agents Local Signing"
-if security find-certificate -c "$IDENTITY" ~/Library/Keychains/login.keychain-db >/dev/null 2>&1; then
+KC="$HOME/Library/Keychains/pet-agents-signing.keychain-db"
+if [ -f "$KC" ]; then
+  security unlock-keychain -p "pet-agents-local" "$KC"
+  HASH=$(security find-identity -p codesigning "$KC" | awk -v n="\"$IDENTITY\"" 'index($0, n) {print $2; exit}')
+  if [ -z "$HASH" ]; then
+    echo "error: \"$IDENTITY\" not found in $KC. Delete that keychain and run app/make-signing-cert.sh again." >&2
+    exit 1
+  fi
+  codesign --force --deep --keychain "$KC" --sign "$HASH" "$APP"
+  echo "Signed with \"$IDENTITY\"."
+elif security find-certificate -c "$IDENTITY" ~/Library/Keychains/login.keychain-db >/dev/null 2>&1; then
+  # Older setup (certificate in the login keychain): works, but macOS may ask for your password.
+  # Run app/make-signing-cert.sh to switch to the prompt-free keychain.
+  echo "Signing with \"$IDENTITY\" from your login keychain (macOS may ask for your password)…"
   codesign --force --deep --sign "$IDENTITY" "$APP"
   echo "Signed with \"$IDENTITY\"."
 else

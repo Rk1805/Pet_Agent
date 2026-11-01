@@ -42,6 +42,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             return
         }
 
+        if CommandLine.arguments.contains("--wa-clear") {
+            Task { @MainActor in await WhatsApp.clearBox(); NSApp.terminate(nil) }
+            return
+        }
+        if CommandLine.arguments.contains("--wa-selftest") {
+            Task { @MainActor in await WhatsApp.selfTest(); NSApp.terminate(nil) }
+            return
+        }
+
         // `PetAgents --mission "play lofi"` runs a mission at launch (handy from Terminal or Shortcuts).
         if let i = CommandLine.arguments.firstIndex(of: "--mission"), i + 1 < CommandLine.arguments.count {
             let text = CommandLine.arguments[i + 1]

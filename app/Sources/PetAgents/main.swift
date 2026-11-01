@@ -22,6 +22,12 @@ if CommandLine.arguments.count > 2, CommandLine.arguments[1] == "--when" {
     exit(0)
 }
 
+// `PetAgents --ax-inputs <bundle id>` lists an app's text fields (diagnostics; needs Accessibility).
+if CommandLine.arguments.count > 2, CommandLine.arguments[1] == "--ax-inputs" {
+    AX.dump(bundleID: CommandLine.arguments[2])
+    exit(0)
+}
+
 let app = NSApplication.shared
 let delegate = AppDelegate()
 app.delegate = delegate
