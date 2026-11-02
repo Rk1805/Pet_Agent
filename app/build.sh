@@ -12,6 +12,11 @@ cp .build/release/PetAgents "$APP/Contents/MacOS/PetAgents"
 cp Info.plist "$APP/Contents/Info.plist"
 cp ../preview/manifest.js "$APP/Contents/Resources/manifest.js"
 cp -R ../preview/strips "$APP/Contents/Resources/strips"
+# Character voices / jutsu sounds (fetched locally by tools/sounds/fetch_sounds.py; not in the repo)
+if [ -f ../Sounds/sounds.json ]; then
+  mkdir -p "$APP/Contents/Resources/Sounds"
+  cp ../Sounds/sounds.json ../Sounds/*.mp3 "$APP/Contents/Resources/Sounds/" 2>/dev/null || true
+fi
 
 # App icon, drawn from the sprites by the app itself.
 ICONSET=build/AppIcon.iconset

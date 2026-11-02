@@ -395,6 +395,7 @@ private struct MissionsTab: View {
         ("🇮🇳 Hindi", ["arijit singh ka gaana chalao", "whatsapp pe mom ko hi likho", "kal 5 baje yaad dilana ki dawai leni hai",
                       "kal ka schedule kya hai"]),
         ("🕷 Pets", ["summon venom", "do a web swing", "dismiss doc ock"]),
+        ("🎶 Themes", ["play naruto theme", "play the sad theme", "play pain theme", "stop theme"]),
     ]
 
     private func send(_ s: String) {
@@ -518,6 +519,31 @@ private struct SettingsTab: View {
                         loginItem = SMAppService.mainApp.status == .enabled
                     }))
                     if !loginError.isEmpty { Text(loginError).font(.system(size: 12)).foregroundStyle(.orange) }
+                }
+                Card(title: "Sounds") {
+                    Toggle("Character voices and jutsu sounds", isOn: Binding(get: { App.config.soundOn }, set: { v in
+                        App.config.soundOn = v; App.config.save(); model.objectWillChange.send()
+                    }))
+                    HStack {
+                        Text("Volume")
+                        Slider(value: Binding(get: { App.config.soundVolume }, set: { v in
+                            App.config.soundVolume = v; App.config.save(); model.objectWillChange.send()
+                        }), in: 0...1)
+                    }
+                    Text(MainActor.assumeIsolated { Sound.shared.available }
+                         ? "Pets speak when you give a mission or ask for a move, and when they arrive. Say \"play naruto theme\" for music."
+                         : "No sound pack found. Run  python3 tools/sounds/fetch_sounds.py  and rebuild.")
+                        .font(.system(size: 12)).foregroundStyle(.white.opacity(0.7))
+                }
+                Card(title: "Character voices (beta, English)") {
+                    Toggle("Characters speak their replies in their own voice", isOn: Binding(get: { App.config.characterVoices }, set: { v in
+                        App.config.characterVoices = v; App.config.save(); model.objectWillChange.send()
+                    }))
+                    let installed = MainActor.assumeIsolated { CharacterVoice.shared.installed }
+                    Text(installed.isEmpty
+                         ? "No voices installed. Run  tools/voice/install_voice.sh naruto  (about 2 GB on disk; runs only while a character talks)."
+                         : "Installed: " + installed.map { $0.capitalized }.joined(separator: ", ") + ". Cloned from their English-dub lines, spoken on your Mac; the voice engine quits when idle.")
+                        .font(.system(size: 12)).foregroundStyle(.white.opacity(0.7))
                 }
                 Card(title: "Understanding") {
                     Text(AIAvailability.available

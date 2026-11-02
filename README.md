@@ -2,7 +2,7 @@
 
 Desktop pets that are also your on-device assistant. Two character packs so far:
 
-- **Naruto pack:** 18 ninja (below).
+- **Naruto pack:** 21 ninja (below), including Rock Lee, Might Guy and Pain.
 - **Spider-Man pack:** Spider-Man, Miles Morales, Spider-Gwen, Doctor Octopus, Green Goblin and Venom.
 
 They are full-length pixel-art sprites (about 170px tall) that walk along the bottom of the
@@ -63,11 +63,12 @@ already in the repo.
    app/make-signing-cert.sh
    ```
 
-   This adds a local certificate called "Pet Agents Local Signing" to your login keychain.
-   The build signs the app with it, so macOS remembers the app's permissions (Accessibility,
-   Automation) every time you rebuild. If you skip it, the app is ad-hoc signed and you have to
-   re-grant Accessibility after every rebuild. Undo: Keychain Access → login → My Certificates →
-   delete "Pet Agents Local Signing".
+   This creates a local certificate called "Pet Agents Local Signing" in its own small keychain
+   (`~/Library/Keychains/pet-agents-signing.keychain-db`). The build signs the app with it, so macOS
+   remembers the app's permissions (Accessibility, Automation) every time you rebuild, and building
+   never asks for your password. If you skip it, the app is ad-hoc signed and you have to re-grant
+   Accessibility after every rebuild. Undo: `security delete-keychain
+   ~/Library/Keychains/pet-agents-signing.keychain-db`.
 
 4. **Build the app.**
 
@@ -76,6 +77,17 @@ already in the repo.
    ```
 
    The first build takes 1–3 minutes. It ends with `Built …/app/build/PetAgents.app`.
+
+   **Sounds (optional):** to give the pets voices and jutsu sound effects, download the sound pack
+   before building:
+
+   ```sh
+   python3 tools/sounds/fetch_sounds.py
+   ```
+
+   It downloads about 70 short clips (7 MB) into `Sounds/`; `build.sh` puts them in the app.
+   They're fan-uploaded clips from myinstants.com and the audio belongs to its owners, so they
+   aren't in the repo (`Sounds/*.mp3` is git-ignored). Only the list, `Sounds/sounds.json`, is.
 
 5. **Open it** (and optionally keep it in Applications):
 
@@ -94,6 +106,7 @@ already in the repo.
    | Understanding free-form requests | System Settings → **Apple Intelligence & Siri** → on (it downloads its model once) |
    | Typing into apps (Claude, Notes…), shortcuts, sending on WhatsApp | System Settings → Privacy & Security → **Accessibility** → Pet Agents on |
    | Reminders / Calendar | Click **Allow** when asked (Privacy & Security → **Reminders** / **Calendars**) |
+   | Talking to your pet (⌃⌥V / 🎤) | Click **Allow** for the **Microphone** (and Speech Recognition on older macOS) |
    | Opening the right WhatsApp chat by name | Click **Allow** for Contacts (Privacy & Security → **Contacts**) |
    | Controlling Spotify, dark mode | Click **OK** on the "Pet Agents wants to control…" prompts (Privacy & Security → **Automation**) |
    | Full Hindi (beyond the built-in Hinglish commands) | Home → Settings → **Download Hindi** |
@@ -118,6 +131,7 @@ step 3 your permissions carry over.
 | --- | --- |
 | `xcrun: error: invalid active developer path` | The Command Line Tools aren't installed: run `xcode-select --install` |
 | Build error mentioning `FoundationModels` | Command Line Tools are older than macOS 26: update them in Software Update |
+| Build asks for your keychain password every time | You have the older login-keychain certificate. Run `app/make-signing-cert.sh` (it now makes a separate, prompt-free keychain) and rebuild |
 | "I need Accessibility permission" even though it's on | The entry belongs to an older build. In Accessibility, select Pet Agents → **−**, then **+** → `app/build/PetAgents.app` → on. Run step 3 so it doesn't happen again |
 | "Simple mode" / AI doesn't understand free-form requests | Apple Intelligence is off, still downloading, or this Mac can't run it (Intel or older macOS). Built-in commands still work |
 | Pets don't appear | 🐾 → Hide/Show Pets, or Home → Settings → Show pets |
@@ -126,8 +140,8 @@ step 3 your permissions carry over.
 ### Uninstall
 
 Quit the app (🐾 → Quit), then delete `PetAgents.app`, the folder
-`~/Library/Application Support/PetAgents`, and (if you made it) the "Pet Agents Local Signing"
-certificate in Keychain Access. Remove Pet Agents from Privacy & Security → Accessibility /
+`~/Library/Application Support/PetAgents`, and (if you made it) the signing keychain:
+`security delete-keychain ~/Library/Keychains/pet-agents-signing.keychain-db`. Remove Pet Agents from Privacy & Security → Accessibility /
 Automation if it's listed.
 
 ## Desktop app (macOS)
@@ -141,7 +155,8 @@ See [Setup](#setup) to install it.
 
 | Do this | What happens |
 | --- | --- |
-| **Click** a pet, or press **⌃⌥Space** anywhere | A command box opens above its head. Type a mission and press Return (↑ recalls earlier ones) |
+| **Click** a pet, or press **⌃⌥Space** anywhere | A command box opens above its head. Type a mission and press Return (↑ recalls earlier ones), or click 🎤 to say it |
+| Press **⌃⌥V** anywhere (or right-click a pet → 🎤 Talk to Me) | The pet listens; your words appear live in its speech bubble. It stops by itself after a short pause (or press ⌃⌥V again) and does the mission |
 | **Drag** a pet | Pick it up; let go and it falls onto the window or Dock below |
 | **Right-click** a pet | Jutsu, idle animations, dismiss |
 | **🐾 menu bar icon** | Home, Give a Mission, Hide/Show Pets, Settings, Quit |
@@ -177,6 +192,14 @@ A Pets Therapy–style window with a tab bar:
 | Apple Shortcuts | "run my Morning shortcut" (anything you have built in Shortcuts) |
 | The pets | "do a rasengan", "summon Itachi", "dismiss Sakura" |
 | Hindi / Hinglish | "whatsapp pe mom ko hi likho" (writes), "rahul ko whatsapp pe kal milte hain bhej do" (sends), "bhej do", "kal 5 baje yaad dilana ki dawai leni hai", "kal shaam 7 baje dinner calendar mein daalo", "kal ka schedule kya hai", "hello kaise ho claude ko bhej do", "claude mein hello likho", "claude se pucho chawal kaise banaye", "steam pe batman khelo", "venom ko bulao", "arijit singh ka gaana chalao", "notes kholo", "10 minute baad yaad dilana paani peena", "awaaz kam karo", "केसरिया बजाओ" |
+
+**Voice** (English): Apple's built-in speech recognition, on your Mac. On macOS 26 it uses the new
+SpeechAnalyzer engine (live results, punctuation, your region's accent model, e.g. Indian English),
+primed with your app names, Steam games and pet names so "open Arkham City" or "summon Miles" come
+out right; older macOS falls back to the on-device dictation engine. The microphone and recogniser
+only run while you're talking. Test recognition on a recording with
+`PetAgents.app/Contents/MacOS/PetAgents --transcribe file.wav`. Hindi voice isn't supported yet
+(Apple's on-device engines have no Hindi; the plan is Whisper for that).
 
 **How it understands you** (everything stays on your Mac, no API keys, no downloads):
 
@@ -214,6 +237,35 @@ a time that has already passed today moves to tomorrow. Check a phrase with
 have it press play on the exact track, create a free app at developer.spotify.com/dashboard
 and paste its Client ID and Secret into **Home → Settings**.
 
+**Sounds:** with the sound pack installed, pets speak when you give them a mission (Shikamaru:
+"sounds like a drag…", Naruto: "Dattebayo!"), when they arrive, and when they do a move you asked
+for (Rasengan, Chidori, Raikiri, Kamui, Kage Bunshin, Amaterasu, Shinra Tensei, "We are Venom", the
+Goblin's laugh, web thwips…). Moves they do on their own while wandering stay silent. Say
+"play naruto theme" / "play the sad theme" / "play pain theme" / "stop theme" for music. Turn sounds
+off or change the volume in Home → Settings. Which clip plays for what is set in
+`Sounds/sounds.json` (`characters` → event or move id → clips; Shippuden versions fall back to the
+Part I lines), so you can swap clips by editing it and running the fetch script again.
+
+**Character voices (beta, English, Naruto only for now):** Naruto says his lines and his mission
+replies in his own English-dub voice, **cloned on your Mac** from about 6 seconds of his real lines (the
+two "Believe it!" clips in `Sounds/`) with [F5-TTS](https://huggingface.co/lucasnewman/f5-tts-mlx) on
+Apple's MLX. No per-character voice model is downloaded. His fixed lines ("On it! Believe it!", "Shadow
+Clone Jutsu!", "Rasengan!", "Naruto Uzumaki is here!") are rendered once at install and play instantly;
+replies take about 3–4 seconds per sentence (the engine starts loading when you give the mission). Setup
+(needs the sound pack; about 2 GB in `~/Library/Application Support/PetAgents/voice`, delete that folder
+to remove it):
+
+```sh
+python3 tools/sounds/fetch_sounds.py      # if you haven't already
+tools/voice/install_voice.sh naruto
+```
+
+The cloning runs in a separate helper (`tools/voice/voice_server.py`) that the app starts only while
+Naruto is talking and that quits after 3 idle minutes, so the pet app itself stays light. The reference
+clips, their transcript and the lines are set in `tools/voice/voices.json`. Toggle it in Home → Settings
+→ Character voices. Naruto's sound-pack clips are English-only (the English-dub "Believe it!" plus sound
+effects).
+
 **Lightweight:** about 25 MB of memory and around 2% CPU. It redraws at 30 fps only while a
 pet moves and at 10 fps when they all stand still, and only re-reads window positions often
 while a pet is falling or standing on a window.
@@ -241,7 +293,9 @@ at launch and prints the result (add `PETAGENTS_DRYRUN=1` to log the actions ins
 | `Hindi.swift` | Hindi / Hinglish command rules and on-device translation |
 | `Home.swift` | The Home window (SwiftUI): Pets, Missions, Settings, About |
 | `AppIcon.swift` | Draws the app icon from the sprites (used by `build.sh`) |
-| `UI.swift` | Command box, global hotkey |
+| `Sound.swift` | Character voices, jutsu sounds and themes (AVAudioPlayer) |
+| `Voice.swift` | Voice input: Apple's on-device speech recognition (SpeechAnalyzer, older-macOS fallback) |
+| `UI.swift` | Command box (with 🎤), global hotkeys |
 | `AppDelegate.swift` | Menu bar item, pet roster, the 30 / 10 fps loop |
 
 ## What's here
@@ -254,7 +308,8 @@ at launch and prints the result (add `PETAGENTS_DRYRUN=1` to log the actions ins
 | `preview/index.html` | Browser preview: a fake desktop with walking pets, plus a gallery of every animation |
 | `preview/strips/`, `preview/manifest.js` | One sprite strip per animation and the metadata the preview reads |
 | `art/` | The character sheet plus one cut-out per character. These are the design reference the sprites copy (outfits, colours). |
-| `tools/sprites/` | The Python generator that draws and animates every sprite and jutsu effect |
+| `tools/sprites/` | The Python generator that draws and animates every sprite and jutsu effect (`konoha.py`: Lee, Guy, Pain; `spider.py`: the Spider-Man pack) |
+| `Sounds/sounds.json`, `tools/sounds/fetch_sounds.py` | Which voice line / sound effect plays when, and the script that downloads the clips |
 | `docs/roster.png` | Line-up of the whole cast |
 
 ## Browser preview
@@ -312,6 +367,9 @@ personal idle (snack / hobby).
 | Hinata | Shippuden | Byakugan, Eight Trigrams 64 Palms, Twin Lion Fists | Cinnamon roll |
 | Tsunade | one version | Ground Smash, Mystic Palm, Katsuyu summoning | Sake |
 | Itachi | one version | Crow Clone, Amaterasu, Susanoo (red) | Dango |
+| Rock Lee | Part I | Leaf Hurricane ("KONOHA SENPU!"), Primary Lotus | Nice Guy pose ("YOUTH!") |
+| Might Guy | one version | Dynamic Entry (flies across the screen), Eight Gates (green → red aura) | Nice Guy pose |
+| Pain | one version | Shinra Tensei (shockwave), Chibaku Tensei (black orb pulls up rocks) | (Rinnegan always on) |
 
 ## Sprite format
 

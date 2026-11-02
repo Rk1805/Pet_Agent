@@ -1,0 +1,72 @@
+{
+  "animations": [
+    {
+      "id": "front",
+      "position": "fromEntityBottomLeft",
+      "requiredLoops": 3
+    },
+    {
+      "id": "sleep",
+      "position": "fromEntityBottomLeft",
+      "requiredLoops": 12
+    },
+    {
+      "id": "dynamic_entry",
+      "position": "fromEntityBottomLeft",
+      "requiredLoops": 1,
+      "size": [
+        1.0,
+        1.302
+      ],
+      "isMoving": true
+    },
+    {
+      "id": "eight_gates",
+      "position": "fromEntityBottomLeft",
+      "requiredLoops": 1,
+      "size": [
+        1.599,
+        1.302
+      ]
+    },
+    {
+      "id": "nice_guy",
+      "position": "fromEntityBottomLeft",
+      "requiredLoops": 2,
+      "size": [
+        1.0,
+        1.198
+      ]
+    }
+  ],
+  "capabilities": [
+    "AnimatedSprite",
+    "AnimationsProvider",
+    "AutoRespawn",
+    "BounceOnLateralCollisions",
+    "Draggable",
+    "FlipHorizontallyWhenGoingLeft",
+    "Gravity",
+    "LinearMovement",
+    "PetsSpritesProvider",
+    "AnimationsScheduler",
+    "Rotating",
+    "ShowsMenuOnRightClick",
+    "TrapEscaper",
+    "PlatformLooper",
+    "TeleportationPortal"
+  ],
+  "dragPath": "drag",
+  "fps": 10,
+  "zIndex": 0,
+  "scale": 1,
+  "tags": [
+    "naruto",
+    "jonin"
+  ],
+  "id": "might_guy",
+  "groupCategory": "might_guy",
+  "colorHex": "2f7a30",
+  "movementPath": "walk",
+  "speed": 0.8
+}

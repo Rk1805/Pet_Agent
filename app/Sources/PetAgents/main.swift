@@ -39,6 +39,14 @@ if CommandLine.arguments.count > 2, CommandLine.arguments[1] == "--transcribe" {
     RunLoop.main.run()
 }
 
+if CommandLine.arguments.count > 1, CommandLine.arguments[1] == "--sound-check" {
+    MainActor.assumeIsolated {
+        let c = Sound.shared.coverage
+        print("sound clips: \(c.present)/\(c.listed) present in \(c.folder)")
+    }
+    exit(0)
+}
+
 let app = NSApplication.shared
 let delegate = AppDelegate()
 app.delegate = delegate

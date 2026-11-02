@@ -1,0 +1,62 @@
+{
+  "animations": [
+    {
+      "id": "front",
+      "position": "fromEntityBottomLeft",
+      "requiredLoops": 3
+    },
+    {
+      "id": "sleep",
+      "position": "fromEntityBottomLeft",
+      "requiredLoops": 12
+    },
+    {
+      "id": "shinra_tensei",
+      "position": "fromEntityBottomLeft",
+      "requiredLoops": 1,
+      "size": [
+        2.599,
+        1.302
+      ]
+    },
+    {
+      "id": "chibaku_tensei",
+      "position": "fromEntityBottomLeft",
+      "requiredLoops": 1,
+      "size": [
+        1.802,
+        2.099
+      ]
+    }
+  ],
+  "capabilities": [
+    "AnimatedSprite",
+    "AnimationsProvider",
+    "AutoRespawn",
+    "BounceOnLateralCollisions",
+    "Draggable",
+    "FlipHorizontallyWhenGoingLeft",
+    "Gravity",
+    "LinearMovement",
+    "PetsSpritesProvider",
+    "AnimationsScheduler",
+    "Rotating",
+    "ShowsMenuOnRightClick",
+    "TrapEscaper",
+    "PlatformLooper",
+    "TeleportationPortal"
+  ],
+  "dragPath": "drag",
+  "fps": 10,
+  "zIndex": 0,
+  "scale": 1,
+  "tags": [
+    "naruto",
+    "akatsuki"
+  ],
+  "id": "pain",
+  "groupCategory": "pain",
+  "colorHex": "7a5bd0",
+  "movementPath": "walk",
+  "speed": 0.4
+}

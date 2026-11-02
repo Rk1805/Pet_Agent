@@ -118,8 +118,10 @@ final class Pet {
 
     // MARK: animation control
 
-    func play(_ id: String, loops: Int? = nil) {
+    /// `voiced`: also play the move's sound. Only for moves you asked for, never the ones pets do on their own.
+    func play(_ id: String, loops: Int? = nil, voiced: Bool = false) {
         guard let m = meta.animations[id] else { return }
+        if voiced { let pid = meta.id; MainActor.assumeIsolated { _ = Sound.shared.play(id, for: pid) } }
         if anim != id { SpriteCache.shared.release(meta.id, anim) }
         anim = id; frame = 0; acc = 0
         framesLeft = m.frames * (loops ?? m.loops)
@@ -140,12 +142,17 @@ final class Pet {
         return "front"
     }
 
-    func randomJutsu() { if let j = meta.ids(kind: "jutsu").randomElement() { play(j) } }
+    func randomJutsu(voiced: Bool = false) { if let j = meta.ids(kind: "jutsu").randomElement() { play(j, voiced: voiced) } }
 
     // MARK: agent hooks
 
     func startWorking(_ status: String) {
         busy = true
+        let pid = meta.id
+        MainActor.assumeIsolated {
+            _ = Sound.shared.play("mission", for: pid)
+            CharacterVoice.shared.warm(pid)
+        }
         play("front", loops: 1000)
         say(status, seconds: 60)
     }
@@ -155,7 +162,10 @@ final class Pet {
     func finishWorking(_ reply: String, success: Bool) {
         busy = false
         say(reply, seconds: max(4, min(14, Double(reply.count) * 0.07)))
-        if success, !dragging { randomJutsu() } else if !dragging { play("front") }
+        let pid = meta.id
+        let speaks = MainActor.assumeIsolated { CharacterVoice.shared.available(pid) }
+        if speaks { MainActor.assumeIsolated { CharacterVoice.shared.speak(reply, pet: pid) } }   // the reply, in their voice
+        if success, !dragging { randomJutsu(voiced: !speaks) } else if !dragging { play("front") }
     }
 
     func say(_ text: String, seconds: Double = 5) {
@@ -297,11 +307,11 @@ final class Pet {
         })
         menu.addItem(.separator())
         for id in meta.ids(kind: "jutsu") {
-            menu.addItem(ClosureItem("🌀 " + meta.animations[id]!.label) { [weak self] in self?.play(id) })
+            menu.addItem(ClosureItem("🌀 " + meta.animations[id]!.label) { [weak self] in self?.play(id, voiced: true) })
         }
         menu.addItem(.separator())
         for id in meta.ids(kind: "idle") + ["sleep", "front"] where meta.animations[id] != nil {
-            menu.addItem(ClosureItem(meta.animations[id]!.label) { [weak self] in self?.play(id) })
+            menu.addItem(ClosureItem(meta.animations[id]!.label) { [weak self] in self?.play(id, voiced: true) })
         }
         menu.addItem(ClosureItem("Walk") { [weak self] in self?.walk() })
         menu.addItem(.separator())

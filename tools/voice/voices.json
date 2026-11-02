@@ -1,0 +1,21 @@
+{
+ "_about": "Character voices for Pet Agents (English only). Each character's voice is cloned on your Mac by F5-TTS (MLX) from a few seconds of their real English-dub speech in Sounds/ (fetch with tools/sounds/fetch_sounds.py). No per-character model is downloaded. Install with tools/voice/install_voice.sh <character>.",
+ "naruto": {
+  "applies_to": ["naruto", "naruto_shippuden"],
+  "reference": {
+   "clips": ["naruto-believe-it_CFOLfj9.mp3", "naruto-believe-it.mp3"],
+   "text": "Believe it. I'm Naruto Uzumaki. Believe it.",
+   "note": "English dub (both clips checked with English speech recognition). 5.7 s in total; more clean English Naruto speech would improve the clone."
+  },
+  "speed": 1.0,
+  "lines": {
+   "mission": ["On it! Believe it!", "Leave it to me!", "Alright, let's do this, believe it!", "You got it!"],
+   "summon": ["Naruto Uzumaki is here! Believe it!"],
+   "shadow_clone": ["Shadow Clone Jutsu!"],
+   "rasengan": ["Rasengan!"],
+   "rasenshuriken": ["Wind Style! Rasenshuriken!"],
+   "sage_mode": ["Sage Mode!"],
+   "ramen": ["Ramen time! Believe it!"]
+  }
+ }
+}

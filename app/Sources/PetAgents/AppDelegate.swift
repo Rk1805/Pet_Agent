@@ -126,7 +126,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         guard let m = Assets.byId[id], pet(id) == nil else { return }
         if petsHidden { setPetsHidden(false) }
         pets.append(Pet(meta: m))
-        if save { savePets() }
+        if save {
+            savePets()
+            MainActor.assumeIsolated { _ = Sound.shared.play("summon", for: id) }     // not at app launch
+        }
         HomeModel.shared.sync()
     }
 

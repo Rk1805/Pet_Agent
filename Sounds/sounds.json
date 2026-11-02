@@ -1,0 +1,367 @@
+{
+ "_about": "Sound map for Pet Agents. Clips come from myinstants.com (user uploads; the audio belongs to its owners). They are downloaded locally by tools/sounds/fetch_sounds.py and are not part of the repo.",
+ "base_url": "https://www.myinstants.com/media/sounds/",
+ "characters": {
+  "naruto": {
+   "mission": [
+    "naruto-believe-it.mp3",
+    "naruto-believe-it_CFOLfj9.mp3"
+   ],
+   "summon": [
+    "naruto-believe-it_CFOLfj9.mp3"
+   ],
+   "shadow_clone": [
+    "export_ofoct_uz3AV4x.mp3"
+   ]
+  },
+  "naruto_shippuden": {
+   "sage_mode": [
+    "ytmp3free_BaQB7oM.mp3"
+   ],
+   "shadow_clone": [
+    "export_ofoct_uz3AV4x.mp3"
+   ]
+  },
+  "sasuke": {
+   "mission": [
+    "uchiha-sasuke.mp3",
+    "usuratonkachi4.mp3"
+   ],
+   "summon": [
+    "uchiha-sasuke.mp3"
+   ],
+   "chidori": [
+    "chidori_sound.mp3",
+    "chidorii.mp3"
+   ],
+   "fireball": [
+    "loko-low-co.mp3",
+    "itachi-katon-goukakyuu-no-jutsu-sound-effect-1.mp3"
+   ]
+  },
+  "sasuke_shippuden": {
+   "amaterasu": [
+    "loko.mp3"
+   ],
+   "susanoo": [
+    "susanoo-sfx.mp3"
+   ],
+   "summon": [
+    "sharingan-sfx.mp3"
+   ]
+  },
+  "sakura": {
+   "mission": [
+    "shannaro-sakura.mp3"
+   ],
+   "summon": [
+    "shannaro-sakura.mp3"
+   ],
+   "inner_sakura": [
+    "shannaro-sakura.mp3"
+   ],
+   "cherry_blossom_impact": [
+    "shannaro-sakura.mp3"
+   ]
+  },
+  "kakashi": {
+   "mission": [
+    "hatake-kakashi.mp3",
+    "kakashi_hatake-mp3cut.mp3"
+   ],
+   "summon": [
+    "hatake-kakashi.mp3"
+   ],
+   "lightning_blade": [
+    "raikiri.mp3"
+   ],
+   "kamui": [
+    "kamui_Mcbv97W.mp3",
+    "obito-no-kamui.mp3"
+   ]
+  },
+  "shikamaru": {
+   "mission": [
+    "tmp7kqrj0cu.mp3",
+    "mendokusai.mp3"
+   ],
+   "summon": [
+    "mendokusai.mp3"
+   ],
+   "shadow_possession": [
+    "ytmp3free_BaQB7oM.mp3"
+   ]
+  },
+  "ino": {
+   "mind_transfer": [
+    "ino-jutsu-naruto.mp3"
+   ],
+   "flower_storm": [
+    "ino-effect.mp3"
+   ]
+  },
+  "choji": {
+   "expansion": [
+    "ytmp3free_BaQB7oM.mp3"
+   ],
+   "partial_expansion": [
+    "ytmp3free_BaQB7oM.mp3"
+   ]
+  },
+  "hinata": {
+   "mission": [
+    "yt1s_zgCJMkU.mp3"
+   ],
+   "summon": [
+    "naruto-kun.mp3"
+   ],
+   "byakugan": [
+    "byakugan_neji_hyuga.mp3",
+    "byakugan-sound-only.mp3"
+   ],
+   "gentle_fist": [
+    "byakugan-sound-only.mp3"
+   ],
+   "eight_trigrams": [
+    "byakugan_neji_hyuga.mp3"
+   ]
+  },
+  "jiraiya": {
+   "mission": [
+    "jiraiya.mp3"
+   ],
+   "summon": [
+    "jiraiya.mp3"
+   ],
+   "toad_summoning": [
+    "tmp9n04sf4_.mp3"
+   ],
+   "rasengan": [
+    "rasengan-sound-effect.mp3"
+   ]
+  },
+  "tsunade": {
+   "mission": [
+    "tsunade-no-bachaan.mp3"
+   ],
+   "ground_smash": [
+    "tsunade-power.mp3"
+   ],
+   "katsuyu": [
+    "tmp9n04sf4_.mp3"
+   ]
+  },
+  "itachi": {
+   "mission": [
+    "itachi-voice.mp3"
+   ],
+   "summon": [
+    "itachi-mangekyou-sharingan-sound-effect.mp3"
+   ],
+   "amaterasu": [
+    "itachi-uchiha-amaterasu-sound-effect_MbIVH8l.mp3"
+   ],
+   "crow_clone": [
+    "itachi-genjutsu.mp3"
+   ],
+   "susanoo": [
+    "susanoo-sfx.mp3"
+   ]
+  },
+  "might_guy": {
+   "mission": [
+    "maito-gai.mp3",
+    "lee-oh-lee-maito-gai.mp3"
+   ],
+   "summon": [
+    "maito-gai.mp3"
+   ],
+   "dynamic_entry": [
+    "konoha-senpuu.mp3"
+   ],
+   "eight_gates": [
+    "naruto-the-raising-fighting-spirit-extended-audiotrimmer_7wvXRts.mp3"
+   ]
+  },
+  "rock_lee": {
+   "mission": [
+    "rock-leee.mp3",
+    "lee-oh-lee-maito-gai.mp3"
+   ],
+   "summon": [
+    "rock-leee.mp3"
+   ],
+   "leaf_hurricane": [
+    "konoha-senpuu.mp3"
+   ],
+   "primary_lotus": [
+    "konoha-senpuu.mp3"
+   ]
+  },
+  "pain": {
+   "mission": [
+    "pain-itami-o-kanjiro.mp3"
+   ],
+   "summon": [
+    "pain-itami-o-kanjiro.mp3"
+   ],
+   "shinra_tensei": [
+    "pain-shinra-tensei-ha.mp3",
+    "shinra-tensei_S3ihgok.mp3"
+   ],
+   "chibaku_tensei": [
+    "chibaku-tensei.mp3"
+   ]
+  },
+  "spider_man": {
+   "web_swing": [
+    "web-thwip.mp3"
+   ],
+   "web_shot": [
+    "spider-man-customized-web-thwip-sound-effect-1_ybmate.mp3"
+   ],
+   "summon": [
+    "spider-man-raimi-spider-sense-1.mp3"
+   ]
+  },
+  "miles_morales": {
+   "summon": [
+    "spiderman-miles-morales-intro.mp3"
+   ],
+   "web_swing": [
+    "web-thwip.mp3"
+   ]
+  },
+  "spider_gwen": {
+   "web_swing": [
+    "web-thwip.mp3"
+   ],
+   "web_shot": [
+    "web-thwip.mp3"
+   ]
+  },
+  "green_goblin": {
+   "mission": [
+    "green-goblin-laugh.mp3",
+    "goblin-laugh.mp3"
+   ],
+   "summon": [
+    "you-know-the-old-saying-green-goblin.mp3"
+   ],
+   "cackle": [
+    "green-goblin-laugh-2_umScxsc.mp3",
+    "goblin-evil-laugh.mp3"
+   ],
+   "pumpkin_bomb": [
+    "green-goblin-laugh.mp3"
+   ],
+   "goblin_glider": [
+    "goblin-laugh.mp3"
+   ]
+  },
+  "venom": {
+   "mission": [
+    "venom-sound.mp3"
+   ],
+   "summon": [
+    "we-are-venom.mp3"
+   ],
+   "we_are_venom": [
+    "we-are-venom.mp3"
+   ],
+   "symbiote_lash": [
+    "venom-sound.mp3"
+   ],
+   "chocolate": [
+    "venom-yummie.mp3"
+   ]
+  }
+ },
+ "shared": {
+  "poof": [
+   "export_ofoct_uz3AV4x.mp3"
+  ],
+  "hand_signs": [
+   "ytmp3free_BaQB7oM.mp3"
+  ]
+ },
+ "themes": {
+  "naruto": "naruto-main-theme.mp3",
+  "sadness and sorrow": "tmpn2mncydk.mp3",
+  "blue bird": "naruto-blue-bird.mp3",
+  "fighting spirit": "naruto-the-raising-fighting-spirit-extended-audiotrimmer_7wvXRts.mp3",
+  "pain": "pain-2.mp3",
+  "spider-man": "spider-man-theme.mp3"
+ },
+ "files": [
+  "byakugan-sound-only.mp3",
+  "byakugan_neji_hyuga.mp3",
+  "chibaku-tensei.mp3",
+  "chidori_sound.mp3",
+  "chidorii.mp3",
+  "d-a-t-t-e-b-a-y-o-meme-audiotrimmer.mp3",
+  "dattebayo.mp3",
+  "export_ofoct_uz3AV4x.mp3",
+  "goblin-evil-laugh.mp3",
+  "goblin-laugh.mp3",
+  "green-goblin-laugh-2_umScxsc.mp3",
+  "green-goblin-laugh.mp3",
+  "hatake-kakashi.mp3",
+  "ino-effect.mp3",
+  "ino-jutsu-naruto.mp3",
+  "itachi-genjutsu.mp3",
+  "itachi-katon-goukakyuu-no-jutsu-sound-effect-1.mp3",
+  "itachi-mangekyou-sharingan-sound-effect.mp3",
+  "itachi-uchiha-amaterasu-sound-effect_MbIVH8l.mp3",
+  "itachi-voice.mp3",
+  "jiraiya.mp3",
+  "kage-bunshin-no-jutsu-naruto-sound-effect.mp3",
+  "kakashi_hatake-mp3cut.mp3",
+  "kamui_Mcbv97W.mp3",
+  "konoha-senpuu.mp3",
+  "lee-oh-lee-maito-gai.mp3",
+  "loko-low-co.mp3",
+  "loko.mp3",
+  "maito-gai.mp3",
+  "mendokusai.mp3",
+  "naruto-believe-it.mp3",
+  "naruto-believe-it_CFOLfj9.mp3",
+  "naruto-blue-bird.mp3",
+  "naruto-kun.mp3",
+  "naruto-main-theme.mp3",
+  "naruto-rasengan-voice.mp3",
+  "naruto-rasenganshippuden-mp3cut.mp3",
+  "naruto-the-raising-fighting-spirit-extended-audiotrimmer_7wvXRts.mp3",
+  "naruto_shadow_clones.mp3",
+  "obito-no-kamui.mp3",
+  "pain-2.mp3",
+  "pain-itami-o-kanjiro.mp3",
+  "pain-shinra-tensei-ha.mp3",
+  "raikiri.mp3",
+  "rasen-shuriken-sound-effect.mp3",
+  "rasengan-sound-effect.mp3",
+  "rock-leee.mp3",
+  "shannaro-sakura.mp3",
+  "sharingan-sfx.mp3",
+  "shinra-tensei_S3ihgok.mp3",
+  "spider-man-customized-web-thwip-sound-effect-1_ybmate.mp3",
+  "spider-man-raimi-spider-sense-1.mp3",
+  "spider-man-theme.mp3",
+  "spiderman-miles-morales-intro.mp3",
+  "susanoo-sfx.mp3",
+  "tmp7kqrj0cu.mp3",
+  "tmp9n04sf4_.mp3",
+  "tmpn2mncydk.mp3",
+  "tsunade-no-bachaan.mp3",
+  "tsunade-power.mp3",
+  "uchiha-sasuke.mp3",
+  "usuratonkachi4.mp3",
+  "venom-sound.mp3",
+  "venom-yummie.mp3",
+  "we-are-venom.mp3",
+  "web-thwip.mp3",
+  "you-know-the-old-saying-green-goblin.mp3",
+  "yt1s_zgCJMkU.mp3",
+  "ytmp3free_BaQB7oM.mp3"
+ ]
+}

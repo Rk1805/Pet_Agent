@@ -1519,6 +1519,242 @@ window.PETS = [
   }
  },
  {
+  "id": "rock_lee",
+  "name": "Rock Lee",
+  "era": "classic",
+  "pack": "naruto",
+  "color": "#3f8f3c",
+  "tagline": "Taijutsu only. Hard work beats talent! The Springtime of Youth!",
+  "speed": 0.85,
+  "group": "rock_lee",
+  "animations": {
+   "front": {
+    "frames": 16,
+    "w": 192,
+    "h": 192,
+    "anchorX": 0,
+    "loops": 3,
+    "moving": false,
+    "label": "Idle",
+    "kind": "base"
+   },
+   "walk": {
+    "frames": 8,
+    "w": 192,
+    "h": 192,
+    "anchorX": 0,
+    "loops": 1,
+    "moving": false,
+    "label": "Walk",
+    "kind": "base"
+   },
+   "drag": {
+    "frames": 6,
+    "w": 192,
+    "h": 192,
+    "anchorX": 0,
+    "loops": 1,
+    "moving": false,
+    "label": "Drag",
+    "kind": "base"
+   },
+   "sleep": {
+    "frames": 16,
+    "w": 192,
+    "h": 192,
+    "anchorX": 0,
+    "loops": 12,
+    "moving": false,
+    "label": "Sleep",
+    "kind": "base"
+   },
+   "leaf_hurricane": {
+    "frames": 22,
+    "w": 384,
+    "h": 192,
+    "anchorX": 0,
+    "loops": 1,
+    "moving": false,
+    "label": "Leaf Hurricane",
+    "kind": "jutsu"
+   },
+   "primary_lotus": {
+    "frames": 28,
+    "w": 192,
+    "h": 365,
+    "anchorX": 0,
+    "loops": 1,
+    "moving": false,
+    "label": "Primary Lotus",
+    "kind": "jutsu"
+   },
+   "nice_guy": {
+    "frames": 16,
+    "w": 192,
+    "h": 230,
+    "anchorX": 0,
+    "loops": 2,
+    "moving": false,
+    "label": "Nice Guy Pose",
+    "kind": "idle"
+   }
+  }
+ },
+ {
+  "id": "might_guy",
+  "name": "Might Guy",
+  "era": "jonin",
+  "pack": "naruto",
+  "color": "#2f7a30",
+  "tagline": "Konoha's Sublime Green Beast of Prey. Kakashi's eternal rival.",
+  "speed": 0.8,
+  "group": "might_guy",
+  "animations": {
+   "front": {
+    "frames": 16,
+    "w": 192,
+    "h": 192,
+    "anchorX": 0,
+    "loops": 3,
+    "moving": false,
+    "label": "Idle",
+    "kind": "base"
+   },
+   "walk": {
+    "frames": 8,
+    "w": 192,
+    "h": 192,
+    "anchorX": 0,
+    "loops": 1,
+    "moving": false,
+    "label": "Walk",
+    "kind": "base"
+   },
+   "drag": {
+    "frames": 6,
+    "w": 192,
+    "h": 192,
+    "anchorX": 0,
+    "loops": 1,
+    "moving": false,
+    "label": "Drag",
+    "kind": "base"
+   },
+   "sleep": {
+    "frames": 16,
+    "w": 192,
+    "h": 192,
+    "anchorX": 0,
+    "loops": 12,
+    "moving": false,
+    "label": "Sleep",
+    "kind": "base"
+   },
+   "dynamic_entry": {
+    "frames": 20,
+    "w": 192,
+    "h": 250,
+    "anchorX": 0,
+    "loops": 1,
+    "moving": true,
+    "label": "Dynamic Entry!",
+    "kind": "jutsu"
+   },
+   "eight_gates": {
+    "frames": 28,
+    "w": 307,
+    "h": 250,
+    "anchorX": 57,
+    "loops": 1,
+    "moving": false,
+    "label": "Eight Gates",
+    "kind": "jutsu"
+   },
+   "nice_guy": {
+    "frames": 16,
+    "w": 192,
+    "h": 230,
+    "anchorX": 0,
+    "loops": 2,
+    "moving": false,
+    "label": "Nice Guy Pose",
+    "kind": "idle"
+   }
+  }
+ },
+ {
+  "id": "pain",
+  "name": "Pain",
+  "era": "akatsuki",
+  "pack": "naruto",
+  "color": "#7a5bd0",
+  "tagline": "Leader of the Akatsuki. Feel pain. Know pain.",
+  "speed": 0.4,
+  "group": "pain",
+  "animations": {
+   "front": {
+    "frames": 16,
+    "w": 192,
+    "h": 192,
+    "anchorX": 0,
+    "loops": 3,
+    "moving": false,
+    "label": "Idle",
+    "kind": "base"
+   },
+   "walk": {
+    "frames": 8,
+    "w": 192,
+    "h": 192,
+    "anchorX": 0,
+    "loops": 1,
+    "moving": false,
+    "label": "Walk",
+    "kind": "base"
+   },
+   "drag": {
+    "frames": 6,
+    "w": 192,
+    "h": 192,
+    "anchorX": 0,
+    "loops": 1,
+    "moving": false,
+    "label": "Drag",
+    "kind": "base"
+   },
+   "sleep": {
+    "frames": 16,
+    "w": 192,
+    "h": 192,
+    "anchorX": 0,
+    "loops": 12,
+    "moving": false,
+    "label": "Sleep",
+    "kind": "base"
+   },
+   "shinra_tensei": {
+    "frames": 24,
+    "w": 499,
+    "h": 250,
+    "anchorX": 153,
+    "loops": 1,
+    "moving": false,
+    "label": "Shinra Tensei",
+    "kind": "jutsu"
+   },
+   "chibaku_tensei": {
+    "frames": 30,
+    "w": 346,
+    "h": 403,
+    "anchorX": 77,
+    "loops": 1,
+    "moving": false,
+    "label": "Chibaku Tensei",
+    "kind": "jutsu"
+   }
+  }
+ },
+ {
   "id": "spider_man",
   "name": "Spider-Man",
   "era": "hero",

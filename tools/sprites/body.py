@@ -511,6 +511,10 @@ def draw_eye(L, box, style, iris, pupil, ch, mirror, special=None):
         for a in (0, 120, 240):
             r = math.radians(a)
             L.put(ix + math.cos(r) * irx * 0.7, cy + eh * 0.05 + math.sin(r) * iry * 0.6, '#1a0303')
+    elif special == 'rinnegan':                     # ripple pattern: rings around a small pupil
+        L.ellipse(ix, cy + eh * 0.05, irx * 0.78, iry * 0.78, '#6f5aa8')
+        L.ellipse(ix, cy + eh * 0.05, irx * 0.58, iry * 0.58, iris)
+        L.ellipse(ix, cy + eh * 0.05, irx * 0.3, iry * 0.3, '#2a1d4a')
     elif not ch.pale_eyes and special != 'byakugan':
         L.ellipse(ix, cy + eh * 0.08, irx * 0.45, iry * 0.45, pupil)
     L.put(ix - irx * 0.4, cy - eh * 0.15, '#ffffff')

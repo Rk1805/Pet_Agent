@@ -187,7 +187,7 @@ enum Tools {
         case "perform_animation":
             let id = s("animation")
             guard pet.meta.animations[id] != nil else { return .fail("No animation \(id).") }
-            pet.play(id)
+            pet.play(id, voiced: true)
             return .ok("Performing \(pet.meta.animations[id]!.label).")
         case "summon_pet", "summon_ninja":
             guard let m = Assets.byId[s("character_id")] ?? LocalCommands.findNinja(s("name")) else {
@@ -289,7 +289,7 @@ enum Timers {
             let target = App.delegate.pet(id) ?? App.delegate.anyPet()
             NSSound(named: "Glass")?.play()
             target?.say("⏰ \(label)", seconds: 20)
-            target?.randomJutsu()
+            target?.randomJutsu(voiced: true)
         }
     }
 }

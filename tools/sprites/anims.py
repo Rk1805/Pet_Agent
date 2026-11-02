@@ -946,7 +946,9 @@ SUSANOO_COLOR = {'sasuke_shippuden': '#8a4fd8', 'itachi': '#ff5a3a'}
 
 
 from spider import MOVES as _SPIDER_MOVES  # noqa: E402  (Spider-Man pack moves)
+from konoha import MOVES as _KONOHA_MOVES  # noqa: E402  (Rock Lee, Might Guy, Pain)
 JUTSU.update(_SPIDER_MOVES)
+JUTSU.update(_KONOHA_MOVES)
 
 
 def build_all(ch):

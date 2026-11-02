@@ -7,6 +7,9 @@ struct Config: Codable {
     var scale = 0.75
     var pets = ["naruto", "kakashi"]
     var welcomed = false
+    var soundOn = true
+    var soundVolume = 0.6
+    var characterVoices = true
 
     init() {}
 
@@ -18,6 +21,9 @@ struct Config: Codable {
         scale = try c.decodeIfPresent(Double.self, forKey: .scale) ?? d.scale
         pets = try c.decodeIfPresent([String].self, forKey: .pets) ?? d.pets
         welcomed = try c.decodeIfPresent(Bool.self, forKey: .welcomed) ?? d.welcomed
+        soundOn = try c.decodeIfPresent(Bool.self, forKey: .soundOn) ?? d.soundOn
+        soundVolume = try c.decodeIfPresent(Double.self, forKey: .soundVolume) ?? d.soundVolume
+        characterVoices = try c.decodeIfPresent(Bool.self, forKey: .characterVoices) ?? d.characterVoices
     }
 
     static var directory: URL {

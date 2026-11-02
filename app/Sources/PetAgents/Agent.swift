@@ -168,6 +168,15 @@ enum LocalCommands {
         if let g = match(t, #"^(?:play|launch|start|open|run)\s+(?:the\s+)?(?:game\s+)?(.+?)(?:\s+game)?$"#), Steam.find(g[0]) != nil {
             return await call("launch_game", ["name": g[0]])
         }
+        // Themes from the sound pack: "play naruto theme", "play the sad theme", "stop theme"
+        if let g = match(lower, #"^(?:play|put on)\s+(?:the\s+)?(.+?)\s+(?:theme|ost|soundtrack)(?:\s+song)?$"#)
+            ?? match(lower, #"^(?:play\s+)?(sadness and sorrow|blue bird|fighting spirit)$"#) {
+            if let name = Sound.shared.playTheme(g[0]) { return ("🎶 Playing the \(name) theme.", true) }
+            if !Sound.shared.available { return ("No sound pack yet: run tools/sounds/fetch_sounds.py.", false) }
+        }
+        if match(lower, #"^(?:stop|pause)\s+(?:the\s+)?(?:theme|ost|soundtrack)$"#) != nil {
+            return Sound.shared.stopTheme() ? ("Theme stopped.", true) : ("No theme is playing.", false)
+        }
         if let g = match(t, #"^(?:play|put on|listen to)\s+(?:the\s+)?(?:song\s+)?(.+?)(?:\s+on spotify)?$"#),
            match(g[0].lowercased(), #"^(something|some|anything|a song|music)\b"#) == nil {   // vague requests go to the model
             return await call("spotify_play", ["query": g[0]])
@@ -249,7 +258,7 @@ enum LocalCommands {
                 return await call("perform_animation", ["animation": id])
             }
         }
-        if match(lower, #"^(do )?(a |your )?(random )?(jutsu|move|trick)$"#) != nil { pet.randomJutsu(); return ("Believe it!", true) }
+        if match(lower, #"^(do )?(a |your )?(random )?(jutsu|move|trick)$"#) != nil { pet.randomJutsu(voiced: true); return ("Believe it!", true) }
         // Someone else's move ("do a web swing" asked of Naruto): say who can do it.
         let wanted = lower.replacingOccurrences(of: #"^(?:do|use|show me)\s+(?:a\s+|an\s+|the\s+|your\s+)?"#, with: "",
                                                 options: .regularExpression)
@@ -291,6 +300,8 @@ enum LocalCommands {
         "spidergwen": "spider_gwen", "docock": "doc_ock", "doctoroctopus": "doc_ock", "octopus": "doc_ock",
         "ock": "doc_ock", "goblin": "green_goblin", "greengoblin": "green_goblin", "normanosborn": "green_goblin",
         "eddie": "venom", "eddiebrock": "venom",
+        "guy": "might_guy", "gai": "might_guy", "guysensei": "might_guy", "maitogai": "might_guy", "mightgai": "might_guy",
+        "lee": "rock_lee", "rocklee": "rock_lee", "nagato": "pain", "yahiko": "pain",
     ]
 
     static func findNinja(_ raw: String) -> PetMeta? {
