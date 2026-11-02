@@ -14,8 +14,8 @@ import argparse
 import hashlib
 import json
 import os
-import select
 import sys
+import threading
 import time
 
 IDLE_SECONDS = 180
@@ -60,7 +60,8 @@ class Voices:
     def warm(self, character):
         """Load the model and the character's reference ahead of time (sent when a mission starts)."""
         name, v = self.base(character)
-        self.render(character, "Ready.", keep=False)
+        if self.model is None:                      # first time only: load + run once so MLX compiles its kernels
+            self.render(character, "Ready.", keep=False)
         self.reference(name, v)
 
     def render(self, character, text, fast=True, keep=True):
@@ -110,18 +111,22 @@ class Voices:
 
 
 def serve(voices):
-    last = time.time()
-    while True:
-        ready, _, _ = select.select([sys.stdin], [], [], 5)
-        if not ready:
-            if time.time() - last > IDLE_SECONDS:
+    """Handle one JSON request per line, in order. (Reading stdin line by line rather than polling it with
+    select(): two requests that arrive together sit in Python's buffer, where select() can't see them.)"""
+    replies = sys.stdout
+    sys.stdout = sys.stderr                         # libraries print progress; keep stdout for replies only
+    state = {"last": time.time(), "busy": False}
+
+    def quit_when_idle():
+        while True:
+            time.sleep(5)
+            if not state["busy"] and time.time() - state["last"] > IDLE_SECONDS:
                 log("idle; quitting")
-                return
-            continue
-        line = sys.stdin.readline()
-        if not line:
-            return                                  # the app closed the pipe
-        last = time.time()
+                os._exit(0)
+
+    threading.Thread(target=quit_when_idle, daemon=True).start()
+    for line in sys.stdin:                          # ends when the app closes the pipe
+        state["busy"] = True
         req = {}
         try:
             req = json.loads(line)
@@ -131,7 +136,11 @@ def serve(voices):
             reply = {"id": req.get("id"), "path": voices.render(req["character"], req["text"])}
         except Exception as e:                      # keep serving after a bad request
             reply = {"id": req.get("id") if isinstance(req, dict) else None, "error": str(e)}
-        print(json.dumps(reply), flush=True)
+        finally:
+            state["busy"] = False
+            state["last"] = time.time()
+        replies.write(json.dumps(reply) + "\n")
+        replies.flush()
 
 
 def main():

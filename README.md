@@ -246,25 +246,34 @@ off or change the volume in Home → Settings. Which clip plays for what is set 
 `Sounds/sounds.json` (`characters` → event or move id → clips; Shippuden versions fall back to the
 Part I lines), so you can swap clips by editing it and running the fetch script again.
 
-**Character voices (beta, English, Naruto only for now):** Naruto says his lines and his mission
-replies in his own English-dub voice, **cloned on your Mac** from about 6 seconds of his real lines (the
-two "Believe it!" clips in `Sounds/`) with [F5-TTS](https://huggingface.co/lucasnewman/f5-tts-mlx) on
-Apple's MLX. No per-character voice model is downloaded. His fixed lines ("On it! Believe it!", "Shadow
-Clone Jutsu!", "Rasengan!", "Naruto Uzumaki is here!") are rendered once at install and play instantly;
-replies take about 3–4 seconds per sentence (the engine starts loading when you give the mission). Setup
-(needs the sound pack; about 2 GB in `~/Library/Application Support/PetAgents/voice`, delete that folder
-to remove it):
+**Character voices (beta, English):** Naruto, Shikamaru, Itachi, Pain, the Green Goblin and Venom
+speak their lines and their mission replies in their own English voice, **cloned on your Mac** from a
+few seconds of their real English lines (dubs and films, from the sound pack) with
+[F5-TTS](https://huggingface.co/lucasnewman/f5-tts-mlx) on Apple's MLX. No per-character voice model is
+downloaded.
+
+- Fixed lines ("Shadow Clone Jutsu!", "What a drag. Fine, I'll do it.", "Almighty Push!", "We are
+  Venom!") are rendered once at install and play instantly.
+- Replies are voiced sentence by sentence (about 3.5 s per sentence on an M2). The speech bubble shows
+  "…" until the voice is ready, then the text appears **at the moment the voice starts**, so text and
+  voice never drift apart. If a reply's voice isn't ready within 7 s, the text shows without it.
+- The engine starts loading when you open the command box (or press ⌃⌥V), so it's warm by the time
+  you send the mission.
+- A voiced character's Japanese clips are muted; only speech-free sound effects play with them.
+
+Other characters have no usable English clips in the sound pack yet, so they keep their sound-pack
+clips. To add one, put a few seconds of clean English lines in `Sounds/`, list them with their exact
+words under a new entry in `tools/voice/voices.json`, and install it. Setup (about 2 GB in
+`~/Library/Application Support/PetAgents/voice`; delete that folder to remove it):
 
 ```sh
-python3 tools/sounds/fetch_sounds.py      # if you haven't already
-tools/voice/install_voice.sh naruto
+python3 tools/sounds/fetch_sounds.py            # sound pack + reference clips
+for c in naruto shikamaru itachi pain green_goblin venom; do tools/voice/install_voice.sh $c; done
 ```
 
-The cloning runs in a separate helper (`tools/voice/voice_server.py`) that the app starts only while
-Naruto is talking and that quits after 3 idle minutes, so the pet app itself stays light. The reference
-clips, their transcript and the lines are set in `tools/voice/voices.json`. Toggle it in Home → Settings
-→ Character voices. Naruto's sound-pack clips are English-only (the English-dub "Believe it!" plus sound
-effects).
+The cloning runs in a separate helper (`tools/voice/voice_server.py`) that the app starts only while a
+character is talking and that quits after 3 idle minutes, so the pet app itself stays light. Toggle it
+in Home → Settings → Character voices.
 
 **Lightweight:** about 25 MB of memory and around 2% CPU. It redraws at 30 fps only while a
 pet moves and at 10 fps when they all stand still, and only re-reads window positions often

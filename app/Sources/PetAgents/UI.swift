@@ -101,7 +101,11 @@ final class CommandBar: NSObject, NSTextFieldDelegate, NSWindowDelegate {
         NSApp.activate(ignoringOtherApps: true)
         panel.makeKeyAndOrderFront(nil)
         panel.makeFirstResponder(field)
-        MainActor.assumeIsolated { Agent.shared.prewarm(pet) }
+        let pid = pet.meta.id
+        MainActor.assumeIsolated {
+            Agent.shared.prewarm(pet)
+            CharacterVoice.shared.warm(pid)          // load the voice while you type
+        }
     }
 
     func hide(restoreFocus: Bool) {

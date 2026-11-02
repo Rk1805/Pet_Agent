@@ -161,11 +161,23 @@ final class Pet {
 
     func finishWorking(_ reply: String, success: Bool) {
         busy = false
-        say(reply, seconds: max(4, min(14, Double(reply.count) * 0.07)))
         let pid = meta.id
+        let seconds = max(4, min(14, Double(reply.count) * 0.07))
         let speaks = MainActor.assumeIsolated { CharacterVoice.shared.available(pid) }
-        if speaks { MainActor.assumeIsolated { CharacterVoice.shared.speak(reply, pet: pid) } }   // the reply, in their voice
-        if success, !dragging { randomJutsu(voiced: !speaks) } else if !dragging { play("front") }
+        guard speaks else {
+            say(reply, seconds: seconds)
+            if success, !dragging { randomJutsu(voiced: true) } else if !dragging { play("front") }
+            return
+        }
+        // Voiced characters: keep "…" up until their voice is ready, then show the text as they start speaking.
+        say("…", seconds: 10)
+        MainActor.assumeIsolated {
+            CharacterVoice.shared.speak(reply, pet: pid) { [weak self] in
+                guard let self else { return }
+                self.say(reply, seconds: seconds + 2)
+                if success, !self.dragging { self.randomJutsu(voiced: false) } else if !self.dragging { self.play("front") }
+            }
+        }
     }
 
     func say(_ text: String, seconds: Double = 5) {

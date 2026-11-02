@@ -1,21 +1,236 @@
 {
- "_about": "Character voices for Pet Agents (English only). Each character's voice is cloned on your Mac by F5-TTS (MLX) from a few seconds of their real English-dub speech in Sounds/ (fetch with tools/sounds/fetch_sounds.py). No per-character model is downloaded. Install with tools/voice/install_voice.sh <character>.",
+ "_about": "Character voices for Pet Agents (English only). Each character's voice is cloned on your Mac by F5-TTS (MLX) from a few seconds of their real English speech (dubs and films) in Sounds/ (fetch with tools/sounds/fetch_sounds.py). No per-character model is downloaded. Install with tools/voice/install_voice.sh <character>.",
  "naruto": {
-  "applies_to": ["naruto", "naruto_shippuden"],
+  "applies_to": [
+   "naruto",
+   "naruto_shippuden"
+  ],
   "reference": {
-   "clips": ["naruto-believe-it_CFOLfj9.mp3", "naruto-believe-it.mp3"],
+   "clips": [
+    "naruto-believe-it_CFOLfj9.mp3",
+    "naruto-believe-it.mp3"
+   ],
    "text": "Believe it. I'm Naruto Uzumaki. Believe it.",
    "note": "English dub (both clips checked with English speech recognition). 5.7 s in total; more clean English Naruto speech would improve the clone."
   },
   "speed": 1.0,
   "lines": {
-   "mission": ["On it! Believe it!", "Leave it to me!", "Alright, let's do this, believe it!", "You got it!"],
-   "summon": ["Naruto Uzumaki is here! Believe it!"],
-   "shadow_clone": ["Shadow Clone Jutsu!"],
-   "rasengan": ["Rasengan!"],
-   "rasenshuriken": ["Wind Style! Rasenshuriken!"],
-   "sage_mode": ["Sage Mode!"],
-   "ramen": ["Ramen time! Believe it!"]
+   "mission": [
+    "On it! Believe it!",
+    "Leave it to me!",
+    "Alright, let's do this, believe it!",
+    "You got it!"
+   ],
+   "summon": [
+    "Naruto Uzumaki is here! Believe it!"
+   ],
+   "shadow_clone": [
+    "Shadow Clone Jutsu!"
+   ],
+   "rasengan": [
+    "Rasengan!"
+   ],
+   "rasenshuriken": [
+    "Wind Style! Rasenshuriken!"
+   ],
+   "sage_mode": [
+    "Sage Mode!"
+   ],
+   "ramen": [
+    "Ramen time! Believe it!"
+   ],
+   "common": [
+    "Done! Believe it!",
+    "Done!",
+    "I couldn't manage that one. Try saying it another way."
+   ]
+  }
+ },
+ "shikamaru": {
+  "applies_to": [
+   "shikamaru",
+   "shikamaru_shippuden"
+  ],
+  "reference": {
+   "clips": [
+    "what-a-drag.mp3",
+    "tmp7kqrj0cu.mp3"
+   ],
+   "text": "Man, what a drag. Sounds like a drag."
+  },
+  "speed": 0.95,
+  "lines": {
+   "mission": [
+    "What a drag. Fine, I'll do it.",
+    "Troublesome... but okay.",
+    "Alright, alright. On it."
+   ],
+   "summon": [
+    "Man, what a drag. Shikamaru's here."
+   ],
+   "shadow_possession": [
+    "Shadow Possession Jutsu, success."
+   ],
+   "shadow_neck_bind": [
+    "Shadow Neck Bind!"
+   ],
+   "shadow_stitching": [
+    "Shadow Stitching!"
+   ],
+   "cloud_watch": [
+    "Clouds have it easy."
+   ],
+   "shogi": [
+    "Checkmate."
+   ],
+   "common": [
+    "Done. What a drag.",
+    "Done!",
+    "I couldn't manage that one. Try saying it another way."
+   ]
+  }
+ },
+ "itachi": {
+  "applies_to": [
+   "itachi"
+  ],
+  "reference": {
+   "clips": [
+    "itachi-genjutsu.mp3"
+   ],
+   "text": "You're already under my Genjutsu."
+  },
+  "speed": 0.9,
+  "lines": {
+   "mission": [
+    "Very well.",
+    "As you wish.",
+    "Consider it done."
+   ],
+   "summon": [
+    "You're already under my genjutsu."
+   ],
+   "amaterasu": [
+    "Amaterasu."
+   ],
+   "crow_clone": [
+    "Look closer. It was a genjutsu."
+   ],
+   "susanoo": [
+    "Susanoo."
+   ],
+   "dango": [
+    "Dango. A small pleasure."
+   ],
+   "common": [
+    "It's done.",
+    "Done!",
+    "I couldn't manage that one. Try saying it another way."
+   ]
+  }
+ },
+ "pain": {
+  "applies_to": [
+   "pain"
+  ],
+  "reference": {
+   "clips": [
+    "my-pain-naruto.mp3"
+   ],
+   "text": "My pain is still far greater than yours!",
+   "note": "Kept short on purpose: every rendered sentence also processes the reference, so long references make speech slow."
+  },
+  "speed": 0.9,
+  "lines": {
+   "mission": [
+    "Very well.",
+    "It will be done.",
+    "As you command."
+   ],
+   "summon": [
+    "This world shall know pain."
+   ],
+   "shinra_tensei": [
+    "Almighty Push!"
+   ],
+   "chibaku_tensei": [
+    "Planetary Devastation!"
+   ],
+   "common": [
+    "It is done.",
+    "Done!",
+    "I couldn't manage that one. Try saying it another way."
+   ]
+  }
+ },
+ "green_goblin": {
+  "applies_to": [
+   "green_goblin"
+  ],
+  "reference": {
+   "clips": [
+    "you-know-the-old-saying-green-goblin.mp3",
+    "willem-dafoe_8I0Ya8q.mp3"
+   ],
+   "text": "You know the old saying? If you can't join 'em, teach 'em. You know, I'm something of a scientist myself."
+  },
+  "speed": 1.0,
+  "lines": {
+   "mission": [
+    "Consider it done!",
+    "Oh, this will be fun!",
+    "Leave it to the Goblin!"
+   ],
+   "summon": [
+    "You know, I'm something of a scientist myself."
+   ],
+   "pumpkin_bomb": [
+    "Pumpkin bombs away!"
+   ],
+   "goblin_glider": [
+    "To the skies!"
+   ],
+   "common": [
+    "Done! Ha ha!",
+    "Done!",
+    "I couldn't manage that one. Try saying it another way."
+   ]
+  }
+ },
+ "venom": {
+  "applies_to": [
+   "venom"
+  ],
+  "reference": {
+   "clips": [
+    "venom-loser.mp3"
+   ],
+   "text": "On my planet, I am kind of a loser, like you. But here we could be more."
+  },
+  "speed": 0.95,
+  "lines": {
+   "mission": [
+    "We will do it.",
+    "We are on it.",
+    "Yes. We are hungry for this."
+   ],
+   "summon": [
+    "We are Venom."
+   ],
+   "we_are_venom": [
+    "We are Venom!"
+   ],
+   "symbiote_lash": [
+    "Tasty!"
+   ],
+   "chocolate": [
+    "Chocolate! We love chocolate."
+   ],
+   "common": [
+    "Done. We did it.",
+    "Done!",
+    "I couldn't manage that one. Try saying it another way."
+   ]
   }
  }
 }

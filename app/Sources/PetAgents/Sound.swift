@@ -11,6 +11,7 @@ final class Sound {
         let characters: [String: [String: [String]]]
         let shared: [String: [String]]
         let themes: [String: String]
+        let sfx: [String]?               // speech-free clips: still fine next to a character's cloned voice
     }
 
     private let folder: URL?
@@ -61,11 +62,11 @@ final class Sound {
         guard enabled else { return false }
         // Characters with an installed voice say their own (English) line; clips then only add sound effects.
         let voice = CharacterVoice.shared
-        if voice.available(pet), let line = voice.line(event, for: pet) {
-            voice.speak(line, pet: pet)
-            if event == "mission" || event == "summon" { return true }
-        }
-        let options = clips(pet, event).compactMap { name in url(name).map { (name, $0) } }
+        let voiced = voice.available(pet)
+        if voiced, let line = voice.line(event, for: pet) { voice.speak(line, pet: pet) }
+        // A voiced character only keeps speech-free clips (sound effects), so its voice stays English.
+        let sfx = Set(map?.sfx ?? [])
+        let options = clips(pet, event).filter { !voiced || sfx.contains($0) }.compactMap { name in url(name).map { (name, $0) } }
         guard !options.isEmpty else { return false }
         let short = options.filter { duration($0.1) <= 6 }
         guard let (_, u) = (short.isEmpty ? options : short).randomElement(),

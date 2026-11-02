@@ -154,6 +154,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         if petsHidden { setPetsHidden(false) }
         guard let target = pet ?? anyPet() else { return }
         activePet = target
+        CharacterVoice.shared.warm(target.meta.id)     // load the voice while you talk
         Voice.shared.start(update: { t in target.say(t, seconds: 30) },
                            done: { said in
             guard let said else { target.say("I didn't catch that.", seconds: 3); return }
