@@ -41,7 +41,7 @@ final class CommandBar: NSObject, NSTextFieldDelegate, NSWindowDelegate {
         bg.autoresizingMask = [.width, .height]
         panel.contentView = bg
 
-        field.frame = NSRect(x: 14, y: 11, width: 352, height: 24)
+        field.frame = NSRect(x: 14, y: 11, width: 322, height: 24)
         field.autoresizingMask = [.width]
         field.isBordered = false
         field.drawsBackground = false
@@ -51,6 +51,34 @@ final class CommandBar: NSObject, NSTextFieldDelegate, NSWindowDelegate {
         field.cell?.isScrollable = true
         field.cell?.wraps = false
         bg.addSubview(field)
+
+        mic.frame = NSRect(x: 342, y: 9, width: 28, height: 28)
+        mic.autoresizingMask = [.minXMargin]
+        mic.bezelStyle = .regularSquare
+        mic.isBordered = false
+        mic.image = NSImage(systemSymbolName: "mic.fill", accessibilityDescription: "Talk")
+        mic.contentTintColor = .secondaryLabelColor
+        mic.target = self
+        mic.action = #selector(micClicked)
+        mic.toolTip = "Talk instead of typing (⌃⌥V)"
+        bg.addSubview(mic)
+    }
+
+    private let mic = NSButton()
+
+    /// 🎤: fill the box with what you say, then run it as the mission.
+    @MainActor @objc private func micClicked() {
+        if Voice.shared.listening { Voice.shared.stop(); return }
+        mic.contentTintColor = .systemRed
+        Voice.shared.start(update: { [weak self] t in self?.field.stringValue = t.replacingOccurrences(of: "🎤 ", with: "") },
+                           done: { [weak self] said in
+            guard let self else { return }
+            self.mic.contentTintColor = .secondaryLabelColor
+            guard let said, let pet = self.pet else { return }
+            self.field.stringValue = said
+            self.hide(restoreFocus: true)
+            Agent.shared.handle(said, pet: pet)
+        })
     }
 
     func show(for pet: Pet) {
@@ -87,6 +115,7 @@ final class CommandBar: NSObject, NSTextFieldDelegate, NSWindowDelegate {
     func control(_ control: NSControl, textView: NSTextView, doCommandBy sel: Selector) -> Bool {
         switch sel {
         case #selector(NSResponder.insertNewline(_:)):
+            if Voice.shared.listening { Voice.shared.stop(); return true }   // Return ends talking; the result runs
             let text = field.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
             hide(restoreFocus: true)
             if !text.isEmpty, let pet {
@@ -110,20 +139,30 @@ final class CommandBar: NSObject, NSTextFieldDelegate, NSWindowDelegate {
     }
 }
 
-// MARK: - global hotkey (⌃⌥Space)
+// MARK: - global hotkeys (⌃⌥Space: mission box, ⌃⌥V: talk)
 
 enum HotKey {
-    static var handler: (() -> Void)?
-    private static var ref: EventHotKeyRef?
+    static var handlers: [UInt32: () -> Void] = [:]
+    private static var refs: [EventHotKeyRef?] = []
+    private static var installed = false
 
-    static func register(_ handler: @escaping () -> Void) {
-        self.handler = handler
-        var spec = EventTypeSpec(eventClass: OSType(kEventClassKeyboard), eventKind: UInt32(kEventHotKeyPressed))
-        InstallEventHandler(GetApplicationEventTarget(), { _, _, _ in
-            DispatchQueue.main.async { HotKey.handler?() }
-            return noErr
-        }, 1, &spec, nil, nil)
-        let id = EventHotKeyID(signature: OSType(0x5054_4147), id: 1)   // 'PTAG'
-        RegisterEventHotKey(UInt32(kVK_Space), UInt32(controlKey | optionKey), id, GetApplicationEventTarget(), 0, &ref)
+    static func register(id: UInt32, key: Int, modifiers: Int, _ handler: @escaping () -> Void) {
+        handlers[id] = handler
+        if !installed {
+            installed = true
+            var spec = EventTypeSpec(eventClass: OSType(kEventClassKeyboard), eventKind: UInt32(kEventHotKeyPressed))
+            InstallEventHandler(GetApplicationEventTarget(), { _, event, _ in
+                var hk = EventHotKeyID()
+                GetEventParameter(event, EventParamName(kEventParamDirectObject), EventParamType(typeEventHotKeyID), nil,
+                                  MemoryLayout<EventHotKeyID>.size, nil, &hk)
+                let id = hk.id
+                DispatchQueue.main.async { HotKey.handlers[id]?() }
+                return noErr
+            }, 1, &spec, nil, nil)
+        }
+        var ref: EventHotKeyRef?
+        RegisterEventHotKey(UInt32(key), UInt32(modifiers), EventHotKeyID(signature: OSType(0x5054_4147), id: id),
+                            GetApplicationEventTarget(), 0, &ref)
+        refs.append(ref)
     }
 }

@@ -23,6 +23,10 @@
     <string>Your pet adds events to your calendar and tells you what's on it when you ask.</string>
     <key>NSContactsUsageDescription</key>
     <string>Your pet looks up a contact's number to open the right WhatsApp chat.</string>
+    <key>NSMicrophoneUsageDescription</key>
+    <string>Your pet listens when you press ⌃⌥V or the mic button, so you can talk instead of typing. Speech is recognised on your Mac.</string>
+    <key>NSSpeechRecognitionUsageDescription</key>
+    <string>Your pet turns what you say into a mission, using Apple's on-device speech recognition.</string>
     <key>NSAppleEventsUsageDescription</key>
     <string>Your pet controls Spotify, System Events and other apps when you give it a mission.</string>
 </dict>

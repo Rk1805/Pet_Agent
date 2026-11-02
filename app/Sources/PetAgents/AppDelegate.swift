@@ -1,4 +1,5 @@
 import AppKit
+import Carbon.HIToolbox
 import QuartzCore
 
 final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
@@ -29,7 +30,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         let start = App.config.pets.filter { Assets.byId[$0] != nil }
         for id in start.isEmpty ? ["naruto"] : start { summon(id, save: false) }
 
-        HotKey.register { [weak self] in self?.openCommandBar(for: nil) }
+        HotKey.register(id: 1, key: kVK_Space, modifiers: controlKey | optionKey) { [weak self] in self?.openCommandBar(for: nil) }
+        HotKey.register(id: 2, key: kVK_ANSI_V, modifiers: controlKey | optionKey) { [weak self] in MainActor.assumeIsolated { self?.talk(to: nil) } }
 
         startTimer(fast: true)
 
@@ -141,6 +143,21 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         App.config.save()
     }
 
+    /// ⌃⌥V / "Talk to me": the pet listens, shows your words in its bubble, then does the mission.
+    @MainActor
+    func talk(to pet: Pet?) {
+        if Voice.shared.listening { Voice.shared.stop(); return }
+        if pets.isEmpty { summon("naruto") }
+        if petsHidden { setPetsHidden(false) }
+        guard let target = pet ?? anyPet() else { return }
+        activePet = target
+        Voice.shared.start(update: { t in target.say(t, seconds: 30) },
+                           done: { said in
+            guard let said else { target.say("I didn't catch that.", seconds: 3); return }
+            MainActor.assumeIsolated { Agent.shared.handle(said, pet: target) }
+        })
+    }
+
     func openCommandBar(for pet: Pet?) {
         if pets.isEmpty { summon("naruto") }
         if petsHidden { setPetsHidden(false) }
@@ -156,6 +173,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         let home = ClosureItem("Home", key: "h") { HomeWindow.shared.show(tab: .pets) }
         menu.addItem(home)
         menu.addItem(ClosureItem("Give a Mission…") { [weak self] in self?.openCommandBar(for: nil) })
+        let listening = MainActor.assumeIsolated { Voice.shared.listening }
+        menu.addItem(ClosureItem(listening ? "Stop Listening" : "Talk to Pet   ⌃⌥V") { [weak self] in
+            MainActor.assumeIsolated { self?.talk(to: nil) }
+        })
         let hide = ClosureItem("Hide/Show Pets", key: "p") { [weak self] in
             guard let self else { return }
             self.setPetsHidden(!self.petsHidden)

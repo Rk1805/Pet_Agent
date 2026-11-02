@@ -28,6 +28,17 @@ if CommandLine.arguments.count > 2, CommandLine.arguments[1] == "--ax-inputs" {
     exit(0)
 }
 
+// `PetAgents --transcribe file.wav` runs Apple's speech recognition on an audio file (testing).
+if CommandLine.arguments.count > 2, CommandLine.arguments[1] == "--transcribe" {
+    let url = URL(fileURLWithPath: CommandLine.arguments[2])
+    Task {
+        if #available(macOS 26.0, *) { print("transcript:", await SpeechAnalyzerSession.transcribe(file: url)) }
+        else { print("needs macOS 26") }
+        exit(0)
+    }
+    RunLoop.main.run()
+}
+
 let app = NSApplication.shared
 let delegate = AppDelegate()
 app.delegate = delegate

@@ -291,6 +291,10 @@ final class Pet {
             guard let self else { return }
             App.delegate.openCommandBar(for: self)
         })
+        menu.addItem(ClosureItem("🎤 Talk to Me") { [weak self] in
+            guard let self else { return }
+            MainActor.assumeIsolated { App.delegate.talk(to: self) }
+        })
         menu.addItem(.separator())
         for id in meta.ids(kind: "jutsu") {
             menu.addItem(ClosureItem("🌀 " + meta.animations[id]!.label) { [weak self] in self?.play(id) })
